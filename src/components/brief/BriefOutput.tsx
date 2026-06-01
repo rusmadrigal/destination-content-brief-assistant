@@ -2,15 +2,17 @@
 
 import { useEffect, useState } from "react";
 import { buildBriefFilename } from "@/lib/briefs/generateDestinationBrief";
+import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
 import type { DestinationBrief } from "@/lib/briefs/types";
 import { Badge, BriefSection, BulletList, CheckList, KeyValueGrid } from "./BriefSection";
 
 interface BriefOutputProps {
   brief: DestinationBrief | null;
   isGenerating: boolean;
+  source: BriefGenerationSource | null;
 }
 
-export function BriefOutput({ brief, isGenerating }: BriefOutputProps) {
+export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -63,7 +65,14 @@ export function BriefOutput({ brief, isGenerating }: BriefOutputProps) {
     <div className="flex flex-col gap-4">
       <div className="glass-panel-strong sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-wider text-ai-cyan-400">Generated brief</p>
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-ai-cyan-400">Generated brief</p>
+            {source === "openai" ? (
+              <Badge tone="violet">OpenAI enhanced</Badge>
+            ) : (
+              <Badge tone="slate">Template</Badge>
+            )}
+          </div>
           <p className="text-sm font-semibold text-slate-100">{o.destination}</p>
         </div>
         <div className="flex flex-wrap gap-2">

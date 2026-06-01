@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { generateDestinationBrief } from "@/lib/briefs/generateDestinationBrief";
+import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
 import { EMPTY_BRIEF_INPUT } from "@/lib/briefs/options";
 import type { DestinationBrief, DestinationBriefInput } from "@/lib/briefs/types";
 import { hasErrors, validateBriefInput, type ValidationErrors } from "@/lib/briefs/validation";
@@ -12,7 +13,9 @@ export function BriefAssistant() {
   const [input, setInput] = useState<DestinationBriefInput>({ ...EMPTY_BRIEF_INPUT });
   const [errors, setErrors] = useState<ValidationErrors>({});
   const [brief, setBrief] = useState<DestinationBrief | null>(null);
+  const [briefSource, setBriefSource] = useState<BriefGenerationSource | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [generateError, setGenerateError] = useState<string | null>(null);
 
   function handleChange(next: DestinationBriefInput) {
     setInput(next);
@@ -21,22 +24,55 @@ export function BriefAssistant() {
     }
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     const validation = validateBriefInput(input);
     setErrors(validation);
     if (hasErrors(validation)) return;
 
     setIsGenerating(true);
-    window.setTimeout(() => {
+    setGenerateError(null);
+
+    try {
+      const response = await fetch("/api/generate-brief", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(input),
+      });
+
+      const data = (await response.json()) as {
+        brief?: DestinationBrief;
+        source?: BriefGenerationSource;
+        error?: string;
+      };
+
+      if (!response.ok) {
+        setGenerateError(data.error ?? "Failed to generate brief.");
+        return;
+      }
+
+      if (data.brief && data.source) {
+        setBrief(data.brief);
+        setBriefSource(data.source);
+      } else {
+        setGenerateError("Invalid response from server.");
+      }
+    } catch {
       setBrief(generateDestinationBrief(input));
+      setBriefSource("deterministic");
+      setGenerateError(
+        "Could not reach the server. A template-based brief was generated locally instead.",
+      );
+    } finally {
       setIsGenerating(false);
-    }, 450);
+    }
   }
 
   function handleClear() {
     setInput({ ...EMPTY_BRIEF_INPUT });
     setErrors({});
     setBrief(null);
+    setBriefSource(null);
+    setGenerateError(null);
   }
 
   return (
@@ -45,6 +81,16 @@ export function BriefAssistant() {
         <Header />
 
         <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+          {generateError && (
+            <div
+              className="mb-6 flex items-start gap-3 rounded-xl border border-ai-fuchsia-500/30 bg-ai-fuchsia-500/10 px-4 py-3 text-sm text-ai-fuchsia-200"
+              role="status"
+            >
+              <span className="mt-0.5 shrink-0 text-ai-fuchsia-400">◇</span>
+              <p>{generateError}</p>
+            </div>
+          )}
+
           {hasErrors(errors) && (
             <div
               className="mb-6 flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur"
@@ -81,7 +127,7 @@ export function BriefAssistant() {
             </div>
 
             <div>
-              <BriefOutput brief={brief} isGenerating={isGenerating} />
+              <BriefOutput brief={brief} isGenerating={isGenerating} source={briefSource} />
             </div>
           </div>
         </main>

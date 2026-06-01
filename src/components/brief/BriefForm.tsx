@@ -184,6 +184,11 @@ export function BriefForm({ value, errors, isGenerating, onChange, onGenerate, o
         />
       </fieldset>
 
+      <p className="text-center text-[11px] text-slate-600">
+        Set <code className="rounded bg-white/5 px-1 py-0.5 text-ai-violet-300">OPENAI_API_KEY</code> in{" "}
+        <code className="rounded bg-white/5 px-1 py-0.5 text-slate-400">.env.local</code> for AI-enhanced briefs.
+      </p>
+
       <div className="sticky bottom-0 -mx-6 -mb-6 flex flex-wrap gap-3 border-t border-white/10 bg-[#0c0c14]/90 px-6 py-4 backdrop-blur-xl">
         <button
           type="submit"

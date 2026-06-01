@@ -496,7 +496,7 @@ function buildWriterChecklist(): string[] {
 
 /* ------------------------------------------------------------ markdown render */
 
-function renderMarkdown(brief: DestinationBrief, input: NormalizedInput): string {
+function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): string {
   const o = brief.overview;
   const lines: string[] = [];
   const push = (s = "") => lines.push(s);
@@ -614,13 +614,37 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedInput): string
 
 /* ------------------------------------------------------------- orchestration */
 
-interface NormalizedInput {
+export interface NormalizedBriefInput {
   secondaryQueries: string[];
   competitorUrls: string[];
   internalLinks: string[];
   localDetails: string[];
   brandVoice: string[];
   currentUrl: string;
+}
+
+/** Normalizes textarea fields from raw form input (used for Markdown export). */
+export function normalizeBriefInput(input: DestinationBriefInput): NormalizedBriefInput {
+  return {
+    secondaryQueries: toLines(input.secondaryQueries),
+    competitorUrls: toLines(input.competitorUrls),
+    internalLinks: toLines(input.internalLinks),
+    localDetails: toLines(input.localDetailsProvided),
+    brandVoice: toLines(input.brandVoiceNotes),
+    currentUrl: input.currentUrl.trim(),
+  };
+}
+
+/** Rebuilds `markdownOutput` after OpenAI or manual edits to brief sections. */
+export function attachMarkdownOutput(
+  brief: Omit<DestinationBrief, "markdownOutput">,
+  input: DestinationBriefInput,
+): DestinationBrief {
+  const normalized = normalizeBriefInput(input);
+  return {
+    ...brief,
+    markdownOutput: renderMarkdown({ ...brief, markdownOutput: "" }, normalized),
+  };
 }
 
 /**
@@ -637,14 +661,7 @@ export function generateDestinationBrief(input: DestinationBriefInput): Destinat
   const primaryKeyword = input.primaryKeyword.trim();
   const cta = input.ctaGoal.trim();
 
-  const normalized: NormalizedInput = {
-    secondaryQueries: toLines(input.secondaryQueries),
-    competitorUrls: toLines(input.competitorUrls),
-    internalLinks: toLines(input.internalLinks),
-    localDetails: toLines(input.localDetailsProvided),
-    brandVoice: toLines(input.brandVoiceNotes),
-    currentUrl: input.currentUrl.trim(),
-  };
+  const normalized = normalizeBriefInput(input);
 
   const season = seasonWord(input.seasonality);
   const seasonTok = seasonToken(input.seasonality);

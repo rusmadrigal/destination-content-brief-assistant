@@ -15,8 +15,20 @@ This tool does **not** generate final, AI-written content. It produces a strateg
 
 ```bash
 pnpm install
+cp .env.local.example .env.local   # then paste your OpenAI API key
 pnpm dev
 ```
+
+### OpenAI (optional, recommended)
+
+Add your key to `.env.local` (never commit this file):
+
+```env
+OPENAI_API_KEY=sk-your-key-here
+OPENAI_MODEL=gpt-4o-mini
+```
+
+Without a key, briefs still generate using the deterministic template engine. With a key, the server enhances the baseline brief via OpenAI while enforcing local-detail guardrails.
 
 Open [http://localhost:3000](http://localhost:3000). The tool is also available at `/destination-content-brief`.
 
@@ -56,18 +68,13 @@ src/
 
 Business logic lives entirely in `src/lib/briefs` and is decoupled from the UI.
 
-## Swapping in a real AI API
+## AI architecture
 
-`generateDestinationBrief(input: DestinationBriefInput): DestinationBrief` in
-`src/lib/briefs/generateDestinationBrief.ts` is the single seam to replace.
+1. `generateDestinationBrief()` builds a deterministic baseline (always).
+2. `enhanceBriefWithOpenAI()` optionally refines prose via OpenAI when `OPENAI_API_KEY` is set.
+3. `POST /api/generate-brief` orchestrates both and returns `{ brief, source }` where `source` is `"openai"` or `"deterministic"`.
 
-To wire up OpenAI / Azure OpenAI / an internal API:
-
-1. Create an async function (e.g. in a Route Handler or Server Action) that calls the provider and maps the response onto the `DestinationBrief` shape from `types.ts`.
-2. In `BriefAssistant.tsx`, replace the `window.setTimeout(...)` block in `handleGenerate` with an `await` of that function.
-3. Keep `generateDestinationBrief` as a deterministic fallback for offline use or when an API key is unavailable.
-
-Because the UI only depends on the `DestinationBrief` type, no component changes are required.
+Local details from the form are re-applied after the model response so invented places cannot slip through.
 
 ## Guardrails
 
