@@ -1,26 +1,186 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #06060b;
+  --foreground: #f1f5f9;
+  --mesh-violet: rgba(139, 92, 246, 0.35);
+  --mesh-cyan: rgba(34, 211, 238, 0.2);
+  --mesh-fuchsia: rgba(217, 70, 239, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-bg: rgba(255, 255, 255, 0.04);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, monospace;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  /* AI accent palette */
+  --color-ai-violet-400: #a78bfa;
+  --color-ai-violet-500: #8b5cf6;
+  --color-ai-violet-600: #7c3aed;
+  --color-ai-cyan-400: #22d3ee;
+  --color-ai-cyan-500: #06b6d4;
+  --color-ai-fuchsia-400: #e879f9;
+  --color-ai-fuchsia-500: #d946ef;
+
+  --color-surface-900: #0c0c14;
+  --color-surface-800: #12121c;
+  --color-surface-700: #1a1a28;
+  --color-surface-600: #252536;
+
+  /* Simpleview brand (subtle secondary accents) */
+  --color-brand-400: #6195bf;
+  --color-brand-500: #397aaf;
+  --color-brand-600: #2d5372;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ambient mesh background for the app shell */
+.ai-mesh-bg {
+  position: relative;
+  background-color: var(--background);
+  background-image:
+    radial-gradient(ellipse 80% 50% at 20% -10%, var(--mesh-violet), transparent 55%),
+    radial-gradient(ellipse 60% 40% at 90% 10%, var(--mesh-cyan), transparent 50%),
+    radial-gradient(ellipse 50% 35% at 50% 100%, var(--mesh-fuchsia), transparent 45%);
+}
+
+.ai-mesh-bg::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  opacity: 0.4;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* Gradient headline text */
+.text-gradient-ai {
+  background: linear-gradient(135deg, #f8fafc 0%, #c4b5fd 40%, #67e8f9 85%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Glass panel */
+.glass-panel {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
+
+.glass-panel-strong {
+  background: rgba(12, 12, 20, 0.75);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+}
+
+/* Gradient border glow (card wrapper) */
+.glow-border {
+  position: relative;
+  border-radius: 1rem;
+  padding: 1px;
+  background: linear-gradient(
+    135deg,
+    rgba(139, 92, 246, 0.45),
+    rgba(34, 211, 238, 0.25),
+    rgba(217, 70, 239, 0.2)
+  );
+}
+
+.glow-border-inner {
+  border-radius: calc(1rem - 1px);
+  background: rgba(12, 12, 20, 0.85);
+  backdrop-filter: blur(16px);
+}
+
+/* Primary CTA gradient */
+.btn-ai-primary {
+  background: linear-gradient(135deg, #7c3aed 0%, #6366f1 45%, #06b6d4 100%);
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.1) inset,
+    0 4px 24px -4px rgba(124, 58, 237, 0.55);
+  transition: box-shadow 0.2s ease, transform 0.15s ease, filter 0.2s ease;
+}
+
+.btn-ai-primary:hover:not(:disabled) {
+  box-shadow:
+    0 0 0 1px rgba(255, 255, 255, 0.15) inset,
+    0 8px 32px -4px rgba(124, 58, 237, 0.65);
+  filter: brightness(1.06);
+}
+
+.btn-ai-primary:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* Shimmer for generating state */
+@keyframes ai-shimmer {
+  0% {
+    background-position: 200% center;
+  }
+  100% {
+    background-position: -200% center;
+  }
+}
+
+.ai-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.08) 50%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: ai-shimmer 2s ease-in-out infinite;
+}
+
+@keyframes ai-pulse-glow {
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+}
+
+.ai-pulse-dot {
+  animation: ai-pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes ai-spin-glow {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.ai-orbit {
+  animation: ai-spin-glow 3s linear infinite;
+}
+
+.brief-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(139, 92, 246, 0.4) transparent;
+}
+.brief-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+.brief-scroll::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #8b5cf6, #06b6d4);
+  border-radius: 9999px;
 }

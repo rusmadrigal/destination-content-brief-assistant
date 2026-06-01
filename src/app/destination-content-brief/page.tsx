@@ -1,5 +1,5 @@
 import { BriefAssistant } from "@/components/brief/BriefAssistant";
 
-export default function Home() {
+export default function DestinationContentBriefPage() {
   return <BriefAssistant />;
 }
