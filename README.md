@@ -19,29 +19,31 @@ cp .env.local.example .env.local   # then paste your OpenAI API key
 pnpm dev
 ```
 
-### OpenAI (optional, recommended)
+### Environment variables
 
-Add your key to `.env.local` (never commit this file):
+Copy `.env.local.example` to `.env.local`:
 
 ```env
+# OpenAI (optional)
 OPENAI_API_KEY=sk-your-key-here
 OPENAI_MODEL=gpt-4o-mini
 ```
 
-Without a key, briefs still generate using the deterministic template engine. With a key, the server enhances the baseline brief via OpenAI while enforcing local-detail guardrails.
+Without `OPENAI_API_KEY`, briefs use the template engine only. Use the **Template only** checkbox to skip OpenAI even when a key is set.
 
 Open [http://localhost:3000](http://localhost:3000). The tool is also available at `/destination-content-brief`.
 
 ```bash
 pnpm build   # production build + type check
 pnpm lint    # eslint
+pnpm test    # vitest (generator unit tests)
 ```
 
 ## How it works
 
 1. The user fills in SEO and planning details (destination, content type, primary keyword, audience, seasonality, goals, internal links, brand voice, local details, etc.).
 2. Required fields (`Destination Name`, `Content Type`, `Primary Keyword`, `Target Audience`, `Business Goal`) are validated.
-3. A deterministic generator assembles a 16-section brief that adapts to the chosen content type and business goal.
+3. A deterministic generator assembles an 18-section brief (including competitive/refresh and Simpleview platform notes) that adapts to the chosen content type and business goal.
 4. The brief can be copied as Markdown or downloaded as a `.md` file (filename derived from the destination + primary keyword).
 
 ## Project structure

@@ -62,7 +62,19 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
   const o = brief.overview;
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="relative flex flex-col gap-4">
+      {isGenerating && (
+        <div
+          className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-[#06060b]/75 backdrop-blur-sm"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-ai-cyan-400" />
+          <p className="text-sm font-semibold text-gradient-ai">Regenerating brief…</p>
+          <p className="mt-1 text-xs text-slate-500">This may take a few seconds with OpenAI enabled.</p>
+        </div>
+      )}
+
       <div className="glass-panel-strong sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -115,7 +127,15 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         <p className="text-slate-300">{brief.strategicObjective}</p>
       </BriefSection>
 
-      <BriefSection index={3} title="Search Intent Analysis">
+      <BriefSection index={3} title="Competitive & Content Refresh Notes">
+        <BulletList items={brief.competitiveAndRefreshNotes} />
+      </BriefSection>
+
+      <BriefSection index={4} title="Simpleview Platform & Partner Notes">
+        <BulletList items={brief.simpleviewPlatformNotes} />
+      </BriefSection>
+
+      <BriefSection index={5} title="Search Intent Analysis">
         <div className="mb-3 flex flex-wrap items-center gap-2">
           <Badge tone="violet">Primary: {brief.searchIntent.primaryIntent}</Badge>
           {brief.searchIntent.supportingIntents.map((intent) => (
@@ -127,19 +147,19 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         <p className="text-slate-300">{brief.searchIntent.explanation}</p>
       </BriefSection>
 
-      <BriefSection index={4} title="Recommended H1">
+      <BriefSection index={6} title="Recommended H1">
         <BulletList items={brief.h1Options} />
       </BriefSection>
 
-      <BriefSection index={5} title="Recommended Title Tags">
+      <BriefSection index={7} title="Recommended Title Tags">
         <BulletList items={brief.titleTagOptions.map((t) => <span key={t}>{t}</span>)} />
       </BriefSection>
 
-      <BriefSection index={6} title="Recommended Meta Descriptions">
+      <BriefSection index={8} title="Recommended Meta Descriptions">
         <BulletList items={brief.metaDescriptionOptions.map((m) => <span key={m}>{m}</span>)} />
       </BriefSection>
 
-      <BriefSection index={7} title="Recommended Page Structure">
+      <BriefSection index={9} title="Recommended Page Structure">
         <ul className="flex flex-col gap-2 font-mono text-xs">
           {brief.recommendedStructure.map((s, i) => (
             <li
@@ -162,7 +182,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         </ul>
       </BriefSection>
 
-      <BriefSection index={8} title="Secondary Query Mapping">
+      <BriefSection index={10} title="Secondary Query Mapping">
         {brief.secondaryQueryMapping.length === 0 ? (
           <p className="italic text-slate-500">No secondary queries provided.</p>
         ) : (
@@ -180,7 +200,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         )}
       </BriefSection>
 
-      <BriefSection index={9} title="Local Knowledge Needed">
+      <BriefSection index={11} title="Local Knowledge Needed">
         {brief.localKnowledgeNeeded.detailsProvided.length > 0 ? (
           <div className="mb-4">
             <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ai-cyan-400">Local Details Provided</p>
@@ -198,7 +218,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         <CheckList items={brief.localKnowledgeNeeded.additionalToConfirm} />
       </BriefSection>
 
-      <BriefSection index={10} title="Internal Linking Recommendations">
+      <BriefSection index={12} title="Internal Linking Recommendations">
         {brief.internalLinkRecommendations[0]?.source === "suggested-category" && (
           <p className="mb-3 text-xs italic text-slate-500">
             No internal links provided. Recommended categories below (no URLs invented).
@@ -221,7 +241,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         </ul>
       </BriefSection>
 
-      <BriefSection index={11} title="Schema Recommendations">
+      <BriefSection index={13} title="Schema Recommendations">
         <ul className="flex flex-col gap-2">
           {brief.schemaRecommendations.map((s) => (
             <li key={s.type} className="flex flex-col gap-1 sm:flex-row sm:gap-3">
@@ -234,25 +254,25 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
         </ul>
       </BriefSection>
 
-      <BriefSection index={12} title="FAQ Suggestions">
+      <BriefSection index={14} title="FAQ Suggestions">
         <BulletList items={brief.faqSuggestions} />
       </BriefSection>
 
-      <BriefSection index={13} title="AI Search Readiness Notes">
+      <BriefSection index={15} title="AI Search Readiness Notes">
         <div className="rounded-xl border border-ai-cyan-500/20 bg-ai-cyan-500/5 p-3">
           <BulletList items={brief.aiSearchReadinessNotes} />
         </div>
       </BriefSection>
 
-      <BriefSection index={14} title="Editorial Guidelines">
+      <BriefSection index={16} title="Editorial Guidelines">
         <BulletList items={brief.editorialGuidelines} />
       </BriefSection>
 
-      <BriefSection index={15} title="Risks and Watchouts">
+      <BriefSection index={17} title="Risks and Watchouts">
         <BulletList items={brief.risksAndWatchouts} />
       </BriefSection>
 
-      <BriefSection index={16} title="Final Writer Checklist">
+      <BriefSection index={18} title="Final Writer Checklist">
         <CheckList items={brief.finalWriterChecklist} />
       </BriefSection>
     </div>

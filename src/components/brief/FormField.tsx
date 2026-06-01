@@ -7,10 +7,11 @@ interface FieldShellProps {
   helperText?: string;
   required?: boolean;
   error?: string;
+  warning?: string;
   children: ReactNode;
 }
 
-function FieldShell({ id, label, helperText, required, error, children }: FieldShellProps) {
+function FieldShell({ id, label, helperText, required, error, warning, children }: FieldShellProps) {
   return (
     <div className="flex flex-col gap-1.5">
       <label htmlFor={id} className="text-sm font-medium text-slate-200">
@@ -22,6 +23,11 @@ function FieldShell({ id, label, helperText, required, error, children }: FieldS
       {error && (
         <p className="text-xs font-medium text-rose-400" role="alert">
           {error}
+        </p>
+      )}
+      {!error && warning && (
+        <p className="text-xs font-medium text-amber-400/90" role="status">
+          {warning}
         </p>
       )}
     </div>
@@ -43,11 +49,12 @@ type TextFieldProps = {
   helperText?: string;
   required?: boolean;
   error?: string;
+  warning?: string;
 } & InputHTMLAttributes<HTMLInputElement>;
 
-export function TextField({ id, label, helperText, required, error, ...rest }: TextFieldProps) {
+export function TextField({ id, label, helperText, required, error, warning, ...rest }: TextFieldProps) {
   return (
-    <FieldShell id={id} label={label} helperText={helperText} required={required} error={error}>
+    <FieldShell id={id} label={label} helperText={helperText} required={required} error={error} warning={warning}>
       <input id={id} className={`${controlBase} ${controlBorder(error)}`} {...rest} />
     </FieldShell>
   );
@@ -59,11 +66,21 @@ type TextAreaFieldProps = {
   helperText?: string;
   required?: boolean;
   error?: string;
+  warning?: string;
 } & TextareaHTMLAttributes<HTMLTextAreaElement>;
 
-export function TextAreaField({ id, label, helperText, required, error, rows = 4, ...rest }: TextAreaFieldProps) {
+export function TextAreaField({
+  id,
+  label,
+  helperText,
+  required,
+  error,
+  warning,
+  rows = 4,
+  ...rest
+}: TextAreaFieldProps) {
   return (
-    <FieldShell id={id} label={label} helperText={helperText} required={required} error={error}>
+    <FieldShell id={id} label={label} helperText={helperText} required={required} error={error} warning={warning}>
       <textarea id={id} rows={rows} className={`${controlBase} ${controlBorder(error)} resize-y`} {...rest} />
     </FieldShell>
   );

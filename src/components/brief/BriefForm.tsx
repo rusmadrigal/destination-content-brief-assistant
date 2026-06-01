@@ -8,19 +8,32 @@ import {
   TARGET_AUDIENCE_OPTIONS,
 } from "@/lib/briefs/options";
 import type { DestinationBriefInput } from "@/lib/briefs/types";
-import type { ValidationErrors } from "@/lib/briefs/validation";
+import type { ValidationErrors, ValidationWarnings } from "@/lib/briefs/validation";
 import { SelectField, TextAreaField, TextField } from "./FormField";
 
 interface BriefFormProps {
   value: DestinationBriefInput;
   errors: ValidationErrors;
+  warnings: ValidationWarnings;
+  templateOnly: boolean;
   isGenerating: boolean;
   onChange: (next: DestinationBriefInput) => void;
+  onTemplateOnlyChange: (checked: boolean) => void;
   onGenerate: () => void;
   onClear: () => void;
 }
 
-export function BriefForm({ value, errors, isGenerating, onChange, onGenerate, onClear }: BriefFormProps) {
+export function BriefForm({
+  value,
+  errors,
+  warnings,
+  templateOnly,
+  isGenerating,
+  onChange,
+  onTemplateOnlyChange,
+  onGenerate,
+  onClear,
+}: BriefFormProps) {
   function update<K extends keyof DestinationBriefInput>(key: K, fieldValue: DestinationBriefInput[K]) {
     onChange({ ...value, [key]: fieldValue });
   }
@@ -137,6 +150,7 @@ export function BriefForm({ value, errors, isGenerating, onChange, onGenerate, o
           helperText="Optional. The page being created or refreshed."
           placeholder="https://www.example.com/things-to-do/"
           value={value.currentUrl}
+          warning={warnings.currentUrl}
           onChange={handleInput("currentUrl")}
         />
 
@@ -146,6 +160,7 @@ export function BriefForm({ value, errors, isGenerating, onChange, onGenerate, o
           helperText="One URL per line."
           placeholder={"https://competitor-a.com/things-to-do/\nhttps://competitor-b.com/fall-guide/"}
           value={value.competitorUrls}
+          warning={warnings.competitorUrls}
           onChange={handleInput("competitorUrls")}
         />
 
@@ -184,10 +199,20 @@ export function BriefForm({ value, errors, isGenerating, onChange, onGenerate, o
         />
       </fieldset>
 
-      <p className="text-center text-[11px] text-slate-600">
-        Set <code className="rounded bg-white/5 px-1 py-0.5 text-ai-violet-300">OPENAI_API_KEY</code> in{" "}
-        <code className="rounded bg-white/5 px-1 py-0.5 text-slate-400">.env.local</code> for AI-enhanced briefs.
-      </p>
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-3">
+        <input
+          type="checkbox"
+          checked={templateOnly}
+          onChange={(e) => onTemplateOnlyChange(e.target.checked)}
+          className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-ai-violet-500 focus:ring-ai-violet-500/40"
+        />
+        <span className="text-sm text-slate-300">
+          <span className="font-medium text-slate-200">Template only</span>
+          <span className="mt-0.5 block text-xs text-slate-500">
+            Skip OpenAI. Keeps all processing on-server (recommended for sensitive inputs).
+          </span>
+        </span>
+      </label>
 
       <div className="sticky bottom-0 -mx-6 -mb-6 flex flex-wrap gap-3 border-t border-white/10 bg-[#0c0c14]/90 px-6 py-4 backdrop-blur-xl">
         <button

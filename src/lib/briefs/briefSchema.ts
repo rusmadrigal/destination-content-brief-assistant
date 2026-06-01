@@ -34,6 +34,8 @@ export const destinationBriefBodySchema = z.object({
     ctaGoal: z.string(),
   }),
   strategicObjective: z.string(),
+  competitiveAndRefreshNotes: z.array(z.string()).min(1),
+  simpleviewPlatformNotes: z.array(z.string()).min(1),
   searchIntent: z.object({
     primaryIntent: searchIntentType,
     supportingIntents: z.array(searchIntentType),

@@ -149,6 +149,10 @@ export interface SchemaRecommendation {
 export interface DestinationBrief {
   overview: BriefOverview;
   strategicObjective: string;
+  /** Competitive differentiation and refresh guidance when URLs are provided. */
+  competitiveAndRefreshNotes: string[];
+  /** Simpleview CMS, partner listings, and platform workflow notes for DMO clients. */
+  simpleviewPlatformNotes: string[];
   searchIntent: SearchIntentAnalysis;
   h1Options: string[];
   titleTagOptions: string[];

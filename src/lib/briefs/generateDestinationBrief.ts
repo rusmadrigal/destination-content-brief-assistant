@@ -426,6 +426,77 @@ function buildFaqSuggestions(
   return Array.from(new Set([...general, ...(byType[contentType] ?? [])])).slice(0, 8);
 }
 
+function buildCompetitiveAndRefreshNotes(
+  normalized: NormalizedBriefInput,
+  goal: BusinessGoal,
+  contentType: ContentType,
+  destination: string,
+  primaryKeyword: string,
+): string[] {
+  const { currentUrl, competitorUrls } = normalized;
+  if (!currentUrl && competitorUrls.length === 0) {
+    return [
+      "Add a current page URL and/or competitor URLs in the form to unlock competitive and refresh analysis prompts.",
+    ];
+  }
+
+  const notes: string[] = [];
+  if (currentUrl) {
+    notes.push(`Audit the existing page (${currentUrl}): identify outdated sections, thin blocks, and missing internal links before rewriting.`);
+    if (goal === "Refresh outdated content") {
+      notes.push("Document what changed since the last publish date (events, hours, seasonal claims) and what can be cut or merged.");
+      notes.push("Compare current rankings and impressions for the primary keyword before and after the refresh plan.");
+    }
+    notes.push(`Ensure the refreshed page still satisfies intent for "${primaryKeyword}" within the first screen.`);
+  }
+  if (competitorUrls.length > 0) {
+    notes.push(`Review ${competitorUrls.length} competitor URL(s) for content depth, section structure, FAQ coverage, and schema usage.`);
+    notes.push("List topics competitors cover that this page should address better with local expertise, not generic filler.");
+    notes.push("Note differentiation angles: official DMO voice, verified local details, partner listings, and up-to-date events.");
+  }
+  if (contentType === "Things To Do Page" || contentType === "Seasonal Guide") {
+    notes.push(`Avoid duplicating other ${destination} hub pages; link laterally instead of repeating the same attraction lists.`);
+  }
+  return notes;
+}
+
+function buildSimpleviewPlatformNotes(
+  goal: BusinessGoal,
+  contentType: ContentType,
+  normalized: NormalizedBriefInput,
+): string[] {
+  const notes: string[] = [
+    "Align the page outline with Simpleview CMS modules and destination taxonomy (listings, categories, and hub pages).",
+    "Use consistent listing fields (name, category, image, description, link) so partner and attraction data stays structured.",
+    "Plan hero and gallery assets for DAM: alt text, credit, and aspect ratios before publish.",
+  ];
+
+  if (
+    goal === "Support partner referrals" ||
+    goal === "Support hotel referrals" ||
+    /partner|listing|restaurant|stay|hotel/i.test(normalized.internalLinks.join(" "))
+  ) {
+    notes.push("Route booking intent to Book Direct / partner referral flows where appropriate; do not invent partner URLs or rates.");
+    notes.push("Confirm partner listings are active, categorized correctly, and attributed per DMO policy.");
+  }
+  if (goal === "Promote events" || contentType === "Event Guide") {
+    notes.push("Cross-check event names and dates against the DMO events calendar or feed before publishing.");
+  }
+  if (goal === "Support meetings and conventions leads" || contentType === "Meetings / Conventions Page") {
+    notes.push("Surface venue and room-block listings from CRM/CMS; make the RFP or contact path obvious above the fold.");
+  }
+  if (contentType === "Restaurant Guide" || contentType === "Neighborhood Guide") {
+    notes.push("Tie recommendations to verified listing pages rather than one-off mentions without a partner record.");
+  }
+  return notes;
+}
+
+const ACCESSIBILITY_GUIDELINES = [
+  "Meet WCAG-oriented basics: logical heading order, descriptive link text, and sufficient color contrast.",
+  "Require meaningful alt text for listing and hero images; avoid text baked into images without a transcript.",
+  "Flag event and venue details that need accessibility fields (mobility, hearing, vision, sensory-friendly).",
+];
+
 function buildAiReadinessNotes(): string[] {
   return [
     "Include concise answer blocks near the top that directly answer the primary question in 1 to 3 sentences.",
@@ -435,6 +506,7 @@ function buildAiReadinessNotes(): string[] {
     "Structure content with descriptive, self-explanatory headings rather than clever wordplay.",
     "Include unique local expertise and first-hand specifics that generic sources cannot replicate.",
     "Avoid vague, generic language; favor precise, verifiable statements.",
+    ...ACCESSIBILITY_GUIDELINES.slice(0, 2),
   ];
 }
 
@@ -447,6 +519,7 @@ function buildEditorialGuidelines(brandVoice: string[]): string[] {
     "Use specific examples provided by local stakeholders.",
     "Prioritize clarity, usefulness, and authenticity.",
     "Make the content helpful before promotional.",
+    ...ACCESSIBILITY_GUIDELINES,
   ];
   if (brandVoice.length > 0) {
     guidelines.push(`Honor the provided brand voice: ${brandVoice.join(" ")}`);
@@ -466,6 +539,7 @@ function buildRisks(
     "Generic AI-sounding copy: enforce local specificity and a human voice.",
     "Over-optimized headings: keep headings natural and reader-first.",
     "Unsupported factual claims: verify every local fact before publishing.",
+    "Accessibility gaps: missing alt text, poor heading hierarchy, or event details without inclusion notes.",
   ];
   if (internalLinks.length === 0) {
     risks.push("Missing internal links: no internal links were provided. Add contextual links before publishing.");
@@ -491,6 +565,8 @@ function buildWriterChecklist(): string[] {
     "Review and finalize the title tag and meta description.",
     "Check that the content answers the primary search intent quickly.",
     "Review the draft for generic language and remove clichés.",
+    "Run an accessibility pass: headings, alt text, link text, and keyboard-friendly CTAs.",
+    "Validate ADA-relevant event and venue details with local stakeholders where applicable.",
   ];
 }
 
@@ -520,7 +596,15 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   push(brief.strategicObjective);
   push();
 
-  push("## 3. Search Intent Analysis");
+  push("## 3. Competitive & Content Refresh Notes");
+  brief.competitiveAndRefreshNotes.forEach((n) => push(`- ${n}`));
+  push();
+
+  push("## 4. Simpleview Platform & Partner Notes");
+  brief.simpleviewPlatformNotes.forEach((n) => push(`- ${n}`));
+  push();
+
+  push("## 5. Search Intent Analysis");
   push(`- **Primary intent:** ${brief.searchIntent.primaryIntent}`);
   if (brief.searchIntent.supportingIntents.length > 0) {
     push(`- **Supporting intents:** ${brief.searchIntent.supportingIntents.join(", ")}`);
@@ -529,19 +613,19 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   push(brief.searchIntent.explanation);
   push();
 
-  push("## 4. Recommended H1");
+  push("## 6. Recommended H1");
   brief.h1Options.forEach((h) => push(`- ${h}`));
   push();
 
-  push("## 5. Recommended Title Tags");
+  push("## 7. Recommended Title Tags");
   brief.titleTagOptions.forEach((t) => push(`- ${t}`));
   push();
 
-  push("## 6. Recommended Meta Descriptions");
+  push("## 8. Recommended Meta Descriptions");
   brief.metaDescriptionOptions.forEach((m) => push(`- ${m}`));
   push();
 
-  push("## 7. Recommended Page Structure");
+  push("## 9. Recommended Page Structure");
   brief.recommendedStructure.forEach((s) => {
     const prefix = s.level === "H1" ? "#" : s.level === "H2" ? "##" : "###";
     const indent = s.level === "H3" ? "  " : "";
@@ -549,7 +633,7 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   });
   push();
 
-  push("## 8. Secondary Query Mapping");
+  push("## 10. Secondary Query Mapping");
   if (brief.secondaryQueryMapping.length === 0) {
     push("_No secondary queries provided._");
   } else {
@@ -557,7 +641,7 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   }
   push();
 
-  push("## 9. Local Knowledge Needed");
+  push("## 11. Local Knowledge Needed");
   if (brief.localKnowledgeNeeded.detailsProvided.length > 0) {
     push("### Local Details Provided");
     brief.localKnowledgeNeeded.detailsProvided.forEach((d) => push(`- ${d}`));
@@ -571,34 +655,34 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   brief.localKnowledgeNeeded.additionalToConfirm.forEach((d) => push(`- [ ] ${d}`));
   push();
 
-  push("## 10. Internal Linking Recommendations");
+  push("## 12. Internal Linking Recommendations");
   if (input.internalLinks.length === 0) {
     push("_No internal links provided. Recommended link categories (do not invent URLs):_");
   }
   brief.internalLinkRecommendations.forEach((r) => push(`- **${r.link}**: ${r.placement}`));
   push();
 
-  push("## 11. Schema Recommendations");
+  push("## 13. Schema Recommendations");
   brief.schemaRecommendations.forEach((s) => push(`- **${s.type}**: ${s.reason}`));
   push();
 
-  push("## 12. FAQ Suggestions");
+  push("## 14. FAQ Suggestions");
   brief.faqSuggestions.forEach((f) => push(`- ${f}`));
   push();
 
-  push("## 13. AI Search Readiness Notes");
+  push("## 15. AI Search Readiness Notes");
   brief.aiSearchReadinessNotes.forEach((n) => push(`- ${n}`));
   push();
 
-  push("## 14. Editorial Guidelines");
+  push("## 16. Editorial Guidelines");
   brief.editorialGuidelines.forEach((g) => push(`- ${g}`));
   push();
 
-  push("## 15. Risks and Watchouts");
+  push("## 17. Risks and Watchouts");
   brief.risksAndWatchouts.forEach((r) => push(`- ${r}`));
   push();
 
-  push("## 16. Final Writer Checklist");
+  push("## 18. Final Writer Checklist");
   brief.finalWriterChecklist.forEach((c) => push(`- [ ] ${c}`));
   push();
 
@@ -679,6 +763,14 @@ export function generateDestinationBrief(input: DestinationBriefInput): Destinat
       ctaGoal: cta,
     },
     strategicObjective: buildStrategicObjective(destination, contentType, audience, goal, season),
+    competitiveAndRefreshNotes: buildCompetitiveAndRefreshNotes(
+      normalized,
+      goal,
+      contentType,
+      destination,
+      primaryKeyword,
+    ),
+    simpleviewPlatformNotes: buildSimpleviewPlatformNotes(goal, contentType, normalized),
     searchIntent: buildSearchIntent(contentType, audience, goal),
     h1Options: buildH1Options(destination, primaryKeyword, contentType, season),
     titleTagOptions: buildTitleTags(destination, primaryKeyword, contentType),

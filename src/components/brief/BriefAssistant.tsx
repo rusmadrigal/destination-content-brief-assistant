@@ -1,24 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { generateDestinationBrief } from "@/lib/briefs/generateDestinationBrief";
 import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
 import { EMPTY_BRIEF_INPUT } from "@/lib/briefs/options";
 import type { DestinationBrief, DestinationBriefInput } from "@/lib/briefs/types";
-import { hasErrors, validateBriefInput, type ValidationErrors } from "@/lib/briefs/validation";
+import {
+  hasErrors,
+  validateBriefInput,
+  validateBriefWarnings,
+  type ValidationErrors,
+  type ValidationWarnings,
+} from "@/lib/briefs/validation";
+import {
+  clearFormDraft,
+  loadFormDraft,
+  useFormDraftAutosave,
+} from "@/lib/hooks/useFormDraft";
+import { AppFooter } from "./AppFooter";
 import { BriefForm } from "./BriefForm";
 import { BriefOutput } from "./BriefOutput";
 
 export function BriefAssistant() {
   const [input, setInput] = useState<DestinationBriefInput>({ ...EMPTY_BRIEF_INPUT });
   const [errors, setErrors] = useState<ValidationErrors>({});
+  const [warnings, setWarnings] = useState<ValidationWarnings>({});
+  const [templateOnly, setTemplateOnly] = useState(false);
   const [brief, setBrief] = useState<DestinationBrief | null>(null);
   const [briefSource, setBriefSource] = useState<BriefGenerationSource | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
+  const [generateNotice, setGenerateNotice] = useState<string | null>(null);
+
+  useFormDraftAutosave(input);
+
+  useEffect(() => {
+    const draft = loadFormDraft();
+    if (draft) setInput(draft);
+  }, []);
 
   function handleChange(next: DestinationBriefInput) {
     setInput(next);
+    setWarnings(validateBriefWarnings(next));
     if (hasErrors(errors)) {
       setErrors(validateBriefInput(next));
     }
@@ -27,21 +50,24 @@ export function BriefAssistant() {
   async function handleGenerate() {
     const validation = validateBriefInput(input);
     setErrors(validation);
+    setWarnings(validateBriefWarnings(input));
     if (hasErrors(validation)) return;
 
     setIsGenerating(true);
     setGenerateError(null);
+    setGenerateNotice(null);
 
     try {
       const response = await fetch("/api/generate-brief", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(input),
+        body: JSON.stringify({ ...input, preferDeterministic: templateOnly }),
       });
 
       const data = (await response.json()) as {
         brief?: DestinationBrief;
         source?: BriefGenerationSource;
+        openaiError?: string;
         error?: string;
       };
 
@@ -53,6 +79,11 @@ export function BriefAssistant() {
       if (data.brief && data.source) {
         setBrief(data.brief);
         setBriefSource(data.source);
+        if (data.openaiError && data.source === "deterministic" && !templateOnly) {
+          setGenerateNotice(
+            `OpenAI could not enhance this brief (${data.openaiError}). A template-based brief was used.`,
+          );
+        }
       } else {
         setGenerateError("Invalid response from server.");
       }
@@ -70,9 +101,12 @@ export function BriefAssistant() {
   function handleClear() {
     setInput({ ...EMPTY_BRIEF_INPUT });
     setErrors({});
+    setWarnings({});
     setBrief(null);
     setBriefSource(null);
     setGenerateError(null);
+    setGenerateNotice(null);
+    clearFormDraft();
   }
 
   return (
@@ -80,7 +114,17 @@ export function BriefAssistant() {
       <div className="relative z-10">
         <Header />
 
-        <main className="mx-auto w-full max-w-7xl px-4 pb-16 pt-6 sm:px-6 lg:px-8">
+        <main className="mx-auto w-full max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
+          {generateNotice && (
+            <div
+              className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+              role="status"
+            >
+              <span className="mt-0.5 shrink-0 text-amber-400">◇</span>
+              <p>{generateNotice}</p>
+            </div>
+          )}
+
           {generateError && (
             <div
               className="mb-6 flex items-start gap-3 rounded-xl border border-ai-fuchsia-500/30 bg-ai-fuchsia-500/10 px-4 py-3 text-sm text-ai-fuchsia-200"
@@ -117,8 +161,11 @@ export function BriefAssistant() {
                   <BriefForm
                     value={input}
                     errors={errors}
+                    warnings={warnings}
+                    templateOnly={templateOnly}
                     isGenerating={isGenerating}
                     onChange={handleChange}
+                    onTemplateOnlyChange={setTemplateOnly}
                     onGenerate={handleGenerate}
                     onClear={handleClear}
                   />
@@ -131,6 +178,8 @@ export function BriefAssistant() {
             </div>
           </div>
         </main>
+
+        <AppFooter />
       </div>
     </div>
   );
@@ -173,6 +222,9 @@ function Header() {
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-ai-violet-500/30 bg-ai-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ai-violet-300">
                   <span className="h-1.5 w-1.5 rounded-full bg-ai-cyan-400 ai-pulse-dot" />
                   AI-assisted
+                </span>
+                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-500">
+                  Simpleview · DMO
                 </span>
               </div>
               <h1 className="text-xl font-semibold tracking-tight text-gradient-ai sm:text-2xl">
