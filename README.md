@@ -2,14 +2,14 @@
 
 An internal MVP that helps SEO teams create structured, search-informed, **human-guided** content briefs for Destination Marketing Organizations (DMOs).
 
-This tool does **not** generate final, AI-written content. It produces a strategic content brief that human writers and local stakeholders use to create better destination content. It never invents local places, businesses, events, dates, prices, hours, or distances — anything local is either supplied by the user or surfaced as a validation prompt.
+This tool does **not** generate final, AI-written content. It produces a strategic content brief that human writers and local stakeholders use to create better destination content. It never invents local places, businesses, events, dates, prices, hours, or distances. Anything local is either supplied by the user or surfaced as a validation prompt.
 
 ## Stack
 
 - **Next.js 16** (App Router) + **React 19** functional components
 - **TypeScript** (strict, no `any`)
 - **Tailwind CSS v4**
-- Deterministic, template-driven generation — **no external AI API required**
+- Deterministic, template-driven generation (no external AI API required by default)
 
 ## Getting started
 

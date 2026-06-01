@@ -156,7 +156,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
                 {s.level}
               </span>
               {s.heading}
-              {s.notes && <span className="ml-1 font-sans italic text-slate-500">— {s.notes}</span>}
+              {s.notes && <span className="ml-1 font-sans italic text-slate-500">({s.notes})</span>}
             </li>
           ))}
         </ul>
@@ -191,7 +191,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
           </div>
         ) : (
           <div className="mb-3 rounded-xl border border-ai-fuchsia-500/25 bg-ai-fuchsia-500/10 px-3 py-2.5 text-xs text-ai-fuchsia-300">
-            No local details were provided. Do not invent local specifics — validate the checklist below with a local
+            No local details were provided. Do not invent local specifics. Validate the checklist below with a local
             stakeholder before writing.
           </div>
         )}
@@ -201,7 +201,7 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
       <BriefSection index={10} title="Internal Linking Recommendations">
         {brief.internalLinkRecommendations[0]?.source === "suggested-category" && (
           <p className="mb-3 text-xs italic text-slate-500">
-            No internal links provided — recommended categories below (no URLs invented).
+            No internal links provided. Recommended categories below (no URLs invented).
           </p>
         )}
         <ul className="flex flex-col gap-2">

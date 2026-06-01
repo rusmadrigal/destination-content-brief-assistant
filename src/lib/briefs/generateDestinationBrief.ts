@@ -214,7 +214,7 @@ function buildTitleTags(destination: string, primaryKeyword: string, contentType
   const titleKw = kw.charAt(0).toUpperCase() + kw.slice(1);
   const base = [
     `${titleKw} | ${destination}`,
-    `${titleKw} – Local Guide & Tips`,
+    `${titleKw} | Local Guide & Tips`,
   ];
   if (contentType === "Meetings / Conventions Page") {
     base.push(`Plan a Meeting in ${destination} | Venues & Planning`);
@@ -249,7 +249,7 @@ function buildStructure(
 ): PageStructureSection[] {
   const template = STRUCTURE_TEMPLATES[contentType];
   const sections: PageStructureSection[] = [
-    { heading: "[Selected H1 — see options above]", level: "H1" },
+    { heading: "[Selected H1 (see options above)]", level: "H1" },
   ];
   template.forEach((section) => {
     sections.push({
@@ -428,10 +428,10 @@ function buildFaqSuggestions(
 
 function buildAiReadinessNotes(): string[] {
   return [
-    "Include concise answer blocks near the top that directly answer the primary question in 1–3 sentences.",
+    "Include concise answer blocks near the top that directly answer the primary question in 1 to 3 sentences.",
     "Use clear entity references (destination name, neighborhoods, official venue names) consistently.",
     "Add direct answers to common traveler questions, mirroring real query phrasing.",
-    "Use updated, factual local details — answer engines reward freshness and specificity.",
+    "Use updated, factual local details. Answer engines reward freshness and specificity.",
     "Structure content with descriptive, self-explanatory headings rather than clever wordplay.",
     "Include unique local expertise and first-hand specifics that generic sources cannot replicate.",
     "Avoid vague, generic language; favor precise, verifiable statements.",
@@ -460,21 +460,21 @@ function buildRisks(
   localDetails: string[],
 ): string[] {
   const risks = [
-    "Thin content — ensure each section delivers substantive, specific value.",
-    "Duplicate destination content — differentiate from competitor and existing internal pages.",
-    "Outdated event information — flag time-sensitive details for periodic review.",
-    "Generic AI-sounding copy — enforce local specificity and a human voice.",
-    "Over-optimized headings — keep headings natural and reader-first.",
-    "Unsupported factual claims — verify every local fact before publishing.",
+    "Thin content: ensure each section delivers substantive, specific value.",
+    "Duplicate destination content: differentiate from competitor and existing internal pages.",
+    "Outdated event information: flag time-sensitive details for periodic review.",
+    "Generic AI-sounding copy: enforce local specificity and a human voice.",
+    "Over-optimized headings: keep headings natural and reader-first.",
+    "Unsupported factual claims: verify every local fact before publishing.",
   ];
   if (internalLinks.length === 0) {
-    risks.push("Missing internal links — no internal links were provided; add contextual links before publishing.");
+    risks.push("Missing internal links: no internal links were provided. Add contextual links before publishing.");
   }
   if (!cta.trim()) {
-    risks.push("Lack of a clear CTA — no CTA goal was provided; define a primary action for the page.");
+    risks.push("Lack of a clear CTA: no CTA goal was provided. Define a primary action for the page.");
   }
   if (localDetails.length === 0) {
-    risks.push("Weak local expertise — no local details were provided; the page risks reading as generic until validated by local stakeholders.");
+    risks.push("Weak local expertise: no local details were provided. The page may read as generic until validated by local stakeholders.");
   }
   return risks;
 }
@@ -545,7 +545,7 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   brief.recommendedStructure.forEach((s) => {
     const prefix = s.level === "H1" ? "#" : s.level === "H2" ? "##" : "###";
     const indent = s.level === "H3" ? "  " : "";
-    push(`${indent}${prefix} ${s.heading}${s.notes ? ` — _${s.notes}_` : ""}`);
+    push(`${indent}${prefix} ${s.heading}${s.notes ? ` (${s.notes})` : ""}`);
   });
   push();
 
@@ -564,7 +564,7 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
     push();
     push("### Additional Local Details to Confirm");
   } else {
-    push("> No local details were provided. Do not invent local specifics — complete the checklist below with a local stakeholder.");
+    push("> No local details were provided. Do not invent local specifics. Complete the checklist below with a local stakeholder.");
     push();
     push("### Local Details to Confirm");
   }
@@ -573,13 +573,13 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
 
   push("## 10. Internal Linking Recommendations");
   if (input.internalLinks.length === 0) {
-    push("_No internal links provided — recommended link categories (do not invent URLs):_");
+    push("_No internal links provided. Recommended link categories (do not invent URLs):_");
   }
-  brief.internalLinkRecommendations.forEach((r) => push(`- **${r.link}** — ${r.placement}`));
+  brief.internalLinkRecommendations.forEach((r) => push(`- **${r.link}**: ${r.placement}`));
   push();
 
   push("## 11. Schema Recommendations");
-  brief.schemaRecommendations.forEach((s) => push(`- **${s.type}** — ${s.reason}`));
+  brief.schemaRecommendations.forEach((s) => push(`- **${s.type}**: ${s.reason}`));
   push();
 
   push("## 12. FAQ Suggestions");

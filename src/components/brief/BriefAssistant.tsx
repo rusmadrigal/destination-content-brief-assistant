@@ -179,7 +179,7 @@ function Header() {
                 Destination Content Brief Assistant
               </h1>
               <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                Create SEO-informed content briefs for DMO teams — strategic planning, not final AI-written copy.
+                Create SEO-informed content briefs for DMO teams. Strategic planning, not final AI-written copy.
               </p>
             </div>
           </div>
