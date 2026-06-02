@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { generateDestinationBrief } from "@/lib/briefs/generateDestinationBrief";
 import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
 import { EMPTY_BRIEF_INPUT } from "@/lib/briefs/options";
@@ -12,6 +12,11 @@ import {
   type ValidationErrors,
   type ValidationWarnings,
 } from "@/lib/briefs/validation";
+import {
+  applySuggestionsToInput,
+  type BriefInputSuggestions,
+  type SuggestionFieldKey,
+} from "@/lib/briefs/suggestTypes";
 import {
   clearFormDraft,
   loadFormDraft,
@@ -31,6 +36,10 @@ export function BriefAssistant() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
   const [generateNotice, setGenerateNotice] = useState<string | null>(null);
+  const [suggestions, setSuggestions] = useState<BriefInputSuggestions | null>(null);
+  const [suggestionsLoading, setSuggestionsLoading] = useState(false);
+  const [suggestionsDismissed, setSuggestionsDismissed] = useState(false);
+  const suggestDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useFormDraftAutosave(input);
 
@@ -38,6 +47,58 @@ export function BriefAssistant() {
     const draft = loadFormDraft();
     if (draft) setInput(draft);
   }, []);
+
+  useEffect(() => {
+    setSuggestionsDismissed(false);
+  }, [input.destinationName]);
+
+  useEffect(() => {
+    const destination = input.destinationName.trim();
+    if (destination.length < 3 || suggestionsDismissed) {
+      setSuggestions(null);
+      setSuggestionsLoading(false);
+      return;
+    }
+
+    if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current);
+    suggestDebounceRef.current = setTimeout(async () => {
+      setSuggestionsLoading(true);
+      try {
+        const response = await fetch("/api/suggest-inputs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            destinationName: destination,
+            useOpenAI: !templateOnly,
+          }),
+        });
+        const data = (await response.json()) as { suggestions?: BriefInputSuggestions };
+        if (response.ok && data.suggestions) {
+          setSuggestions(data.suggestions);
+        }
+      } catch {
+        setSuggestions(null);
+      } finally {
+        setSuggestionsLoading(false);
+      }
+    }, 750);
+
+    return () => {
+      if (suggestDebounceRef.current) clearTimeout(suggestDebounceRef.current);
+    };
+  }, [input.destinationName, suggestionsDismissed, templateOnly]);
+
+  function applySuggestionField(field: SuggestionFieldKey) {
+    if (!suggestions) return;
+    const suggested = suggestions[field];
+    if (typeof suggested !== "string") return;
+    setInput((prev) => ({ ...prev, [field]: suggested }));
+  }
+
+  function applyAllSuggestions() {
+    if (!suggestions) return;
+    setInput((prev) => applySuggestionsToInput(prev, suggestions));
+  }
 
   function handleChange(next: DestinationBriefInput) {
     setInput(next);
@@ -106,6 +167,8 @@ export function BriefAssistant() {
     setBriefSource(null);
     setGenerateError(null);
     setGenerateNotice(null);
+    setSuggestions(null);
+    setSuggestionsDismissed(false);
     clearFormDraft();
   }
 
@@ -162,10 +225,15 @@ export function BriefAssistant() {
                     value={input}
                     errors={errors}
                     warnings={warnings}
+                    suggestions={suggestionsDismissed ? null : suggestions}
+                    suggestionsLoading={suggestionsLoading && !suggestionsDismissed}
                     templateOnly={templateOnly}
                     isGenerating={isGenerating}
                     onChange={handleChange}
                     onTemplateOnlyChange={setTemplateOnly}
+                    onApplySuggestionField={applySuggestionField}
+                    onApplyAllSuggestions={applyAllSuggestions}
+                    onDismissSuggestions={() => setSuggestionsDismissed(true)}
                     onGenerate={handleGenerate}
                     onClear={handleClear}
                   />

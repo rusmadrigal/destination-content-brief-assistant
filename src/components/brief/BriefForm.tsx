@@ -7,18 +7,26 @@ import {
   SEASONALITY_OPTIONS,
   TARGET_AUDIENCE_OPTIONS,
 } from "@/lib/briefs/options";
+import type { BriefInputSuggestions, SuggestionFieldKey } from "@/lib/briefs/suggestTypes";
+import { SUGGESTION_FIELD_LABELS } from "@/lib/briefs/suggestTypes";
 import type { DestinationBriefInput } from "@/lib/briefs/types";
 import type { ValidationErrors, ValidationWarnings } from "@/lib/briefs/validation";
+import { BriefSuggestionsPanel, FieldSuggestionChip } from "./BriefSuggestionsPanel";
 import { SelectField, TextAreaField, TextField } from "./FormField";
 
 interface BriefFormProps {
   value: DestinationBriefInput;
   errors: ValidationErrors;
   warnings: ValidationWarnings;
+  suggestions: BriefInputSuggestions | null;
+  suggestionsLoading: boolean;
   templateOnly: boolean;
   isGenerating: boolean;
   onChange: (next: DestinationBriefInput) => void;
   onTemplateOnlyChange: (checked: boolean) => void;
+  onApplySuggestionField: (field: SuggestionFieldKey) => void;
+  onApplyAllSuggestions: () => void;
+  onDismissSuggestions: () => void;
   onGenerate: () => void;
   onClear: () => void;
 }
@@ -27,10 +35,15 @@ export function BriefForm({
   value,
   errors,
   warnings,
+  suggestions,
+  suggestionsLoading,
   templateOnly,
   isGenerating,
   onChange,
   onTemplateOnlyChange,
+  onApplySuggestionField,
+  onApplyAllSuggestions,
+  onDismissSuggestions,
   onGenerate,
   onClear,
 }: BriefFormProps) {
@@ -48,6 +61,21 @@ export function BriefForm({
     onGenerate();
   }
 
+  function chip(field: SuggestionFieldKey) {
+    if (!suggestions) return null;
+    const suggested = suggestions[field];
+    if (typeof suggested !== "string" || !suggested.trim()) return null;
+    const current = value[field];
+    if (typeof current === "string" && current.trim() === suggested.trim()) return null;
+    return (
+      <FieldSuggestionChip
+        label={SUGGESTION_FIELD_LABELS[field]}
+        suggestedValue={suggested}
+        onApply={() => onApplySuggestionField(field)}
+      />
+    );
+  }
+
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <fieldset className="flex flex-col gap-4">
@@ -59,40 +87,58 @@ export function BriefForm({
           id="destinationName"
           label="Destination Name"
           required
-          placeholder="Asheville, NC"
+          placeholder="Panama City Beach, FL"
           value={value.destinationName}
           error={errors.destinationName}
           onChange={handleInput("destinationName")}
         />
 
-        <SelectField
-          id="contentType"
-          label="Content Type"
-          required
-          options={CONTENT_TYPE_OPTIONS}
-          value={value.contentType}
-          error={errors.contentType}
-          onChange={handleInput("contentType")}
+        <BriefSuggestionsPanel
+          destination={value.destinationName}
+          suggestions={suggestions}
+          isLoading={suggestionsLoading}
+          onApplyAll={onApplyAllSuggestions}
+          onApplyField={onApplySuggestionField}
+          onDismiss={onDismissSuggestions}
         />
 
-        <TextField
-          id="primaryKeyword"
-          label="Primary Keyword"
-          required
-          placeholder="things to do in Asheville in fall"
-          value={value.primaryKeyword}
-          error={errors.primaryKeyword}
-          onChange={handleInput("primaryKeyword")}
-        />
+        <div>
+          <SelectField
+            id="contentType"
+            label="Content Type"
+            required
+            options={CONTENT_TYPE_OPTIONS}
+            value={value.contentType}
+            error={errors.contentType}
+            onChange={handleInput("contentType")}
+          />
+          {chip("contentType")}
+        </div>
 
-        <TextAreaField
-          id="secondaryQueries"
-          label="Secondary Queries"
-          helperText="One query per line."
-          placeholder={"best fall activities in Asheville\nAsheville fall foliage\nfall events in Asheville"}
-          value={value.secondaryQueries}
-          onChange={handleInput("secondaryQueries")}
-        />
+        <div>
+          <TextField
+            id="primaryKeyword"
+            label="Primary Keyword"
+            required
+            placeholder="things to do in Panama City Beach"
+            value={value.primaryKeyword}
+            error={errors.primaryKeyword}
+            onChange={handleInput("primaryKeyword")}
+          />
+          {chip("primaryKeyword")}
+        </div>
+
+        <div>
+          <TextAreaField
+            id="secondaryQueries"
+            label="Secondary Queries"
+            helperText="One query per line."
+            placeholder={"best beaches in Panama City Beach\nfamily activities in Panama City Beach"}
+            value={value.secondaryQueries}
+            onChange={handleInput("secondaryQueries")}
+          />
+          {chip("secondaryQueries")}
+        </div>
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
@@ -101,42 +147,54 @@ export function BriefForm({
         </legend>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <SelectField
-            id="targetAudience"
-            label="Target Audience"
-            required
-            options={TARGET_AUDIENCE_OPTIONS}
-            value={value.targetAudience}
-            error={errors.targetAudience}
-            onChange={handleInput("targetAudience")}
-          />
-          <SelectField
-            id="seasonality"
-            label="Seasonality"
-            options={SEASONALITY_OPTIONS}
-            value={value.seasonality}
-            onChange={handleInput("seasonality")}
-          />
+          <div>
+            <SelectField
+              id="targetAudience"
+              label="Target Audience"
+              required
+              options={TARGET_AUDIENCE_OPTIONS}
+              value={value.targetAudience}
+              error={errors.targetAudience}
+              onChange={handleInput("targetAudience")}
+            />
+            {chip("targetAudience")}
+          </div>
+          <div>
+            <SelectField
+              id="seasonality"
+              label="Seasonality"
+              options={SEASONALITY_OPTIONS}
+              value={value.seasonality}
+              onChange={handleInput("seasonality")}
+            />
+            {chip("seasonality")}
+          </div>
         </div>
 
-        <SelectField
-          id="businessGoal"
-          label="Business Goal"
-          required
-          options={BUSINESS_GOAL_OPTIONS}
-          value={value.businessGoal}
-          error={errors.businessGoal}
-          onChange={handleInput("businessGoal")}
-        />
+        <div>
+          <SelectField
+            id="businessGoal"
+            label="Business Goal"
+            required
+            options={BUSINESS_GOAL_OPTIONS}
+            value={value.businessGoal}
+            error={errors.businessGoal}
+            onChange={handleInput("businessGoal")}
+          />
+          {chip("businessGoal")}
+        </div>
 
-        <TextField
-          id="ctaGoal"
-          label="CTA Goal"
-          helperText="The primary action you want readers to take."
-          placeholder="Explore upcoming fall events"
-          value={value.ctaGoal}
-          onChange={handleInput("ctaGoal")}
-        />
+        <div>
+          <TextField
+            id="ctaGoal"
+            label="CTA Goal"
+            helperText="The primary action you want readers to take."
+            placeholder="Start planning your beach getaway"
+            value={value.ctaGoal}
+            onChange={handleInput("ctaGoal")}
+          />
+          {chip("ctaGoal")}
+        </div>
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
@@ -164,14 +222,17 @@ export function BriefForm({
           onChange={handleInput("competitorUrls")}
         />
 
-        <TextAreaField
-          id="internalLinks"
-          label="Internal Links"
-          helperText="One URL per line. Leave blank to get recommended link categories."
-          placeholder={"/things-to-do/\n/events/\n/restaurants/\n/places-to-stay/\n/itineraries/"}
-          value={value.internalLinks}
-          onChange={handleInput("internalLinks")}
-        />
+        <div>
+          <TextAreaField
+            id="internalLinks"
+            label="Internal Links"
+            helperText="One URL per line. Leave blank to get recommended link categories."
+            placeholder={"/things-to-do/\n/events/\n/restaurants/\n/places-to-stay/\n/itineraries/"}
+            value={value.internalLinks}
+            onChange={handleInput("internalLinks")}
+          />
+          {chip("internalLinks")}
+        </div>
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
@@ -179,21 +240,24 @@ export function BriefForm({
           Voice &amp; Local Context
         </legend>
 
-        <TextAreaField
-          id="brandVoiceNotes"
-          label="Brand Voice Notes"
-          rows={3}
-          placeholder="Friendly, local, practical, not overly promotional."
-          value={value.brandVoiceNotes}
-          onChange={handleInput("brandVoiceNotes")}
-        />
+        <div>
+          <TextAreaField
+            id="brandVoiceNotes"
+            label="Brand Voice Notes"
+            rows={3}
+            placeholder="Friendly, local, practical, not overly promotional."
+            value={value.brandVoiceNotes}
+            onChange={handleInput("brandVoiceNotes")}
+          />
+          {chip("brandVoiceNotes")}
+        </div>
 
         <TextAreaField
           id="localDetailsProvided"
           label="Local Details Provided"
           helperText="Known local places, events, and facts the brief can reference. If left blank, the brief will ask the team to validate local details instead of inventing them."
           rows={5}
-          placeholder={"Blue Ridge Parkway\nRiver Arts District\nBiltmore Estate\nLocal breweries\nFall foliage usually peaks in October"}
+          placeholder={"Pier Park\nSt. Andrews State Park\nLocal seafood spots (add names your team approves)"}
           value={value.localDetailsProvided}
           onChange={handleInput("localDetailsProvided")}
         />
@@ -209,7 +273,7 @@ export function BriefForm({
         <span className="text-sm text-slate-300">
           <span className="font-medium text-slate-200">Template only</span>
           <span className="mt-0.5 block text-xs text-slate-500">
-            Skip OpenAI. Keeps all processing on-server (recommended for sensitive inputs).
+            Skip OpenAI for brief generation and field suggestions.
           </span>
         </span>
       </label>

@@ -1,8 +1,10 @@
 import OpenAI from "openai";
 import { getOpenAIConfig } from "@/lib/env/openai";
-import { destinationBriefBodySchema, type DestinationBriefBody } from "./briefSchema";
+import { destinationBriefBodySchema } from "./briefSchema";
 import { attachMarkdownOutput, normalizeBriefInput } from "./generateDestinationBrief";
+import { mergeOpenAIResponseWithBaseline, parseOpenAIJsonContent } from "./mergeOpenAIBrief";
 import type { DestinationBrief, DestinationBriefInput } from "./types";
+import type { DestinationBriefBody } from "./briefSchema";
 
 const SYSTEM_PROMPT = `You are an expert SEO and destination marketing strategist for DMO (Destination Marketing Organization) content briefs.
 
@@ -12,36 +14,32 @@ You will receive:
 
 Your job is to ENHANCE the baseline brief: improve clarity, strategic wording, title tags, meta descriptions, H1 options, search intent explanation, FAQ phrasing, competitive notes, Simpleview platform notes, and editorial guidance.
 
-CRITICAL RULES (violations are unacceptable):
+Return ONE JSON object with EXACTLY these top-level keys (all required):
+overview, strategicObjective, competitiveAndRefreshNotes, simpleviewPlatformNotes, searchIntent, h1Options, titleTagOptions, metaDescriptionOptions, recommendedStructure, secondaryQueryMapping, localKnowledgeNeeded, internalLinkRecommendations, schemaRecommendations, faqSuggestions, aiSearchReadinessNotes, editorialGuidelines, risksAndWatchouts, finalWriterChecklist
+
+Enum rules (use exact strings only):
+- searchIntent.primaryIntent and searchIntent.supportingIntents: "Inspiration", "Trip planning", "Transactional / booking support", "Local discovery", "Event planning", "Meeting planning", "Comparison / research"
+- recommendedStructure[].level: "H1", "H2", or "H3"
+- internalLinkRecommendations[].source: "provided" or "suggested-category"
+- schemaRecommendations[].type: "Article", "FAQPage", "BreadcrumbList", "Event", "TouristDestination", "LocalBusiness", "ItemList", "HowTo", "CollectionPage"
+
+CRITICAL RULES:
 - Do NOT generate final article copy. Output is a planning brief only.
 - Do NOT invent local businesses, attractions, events, dates, prices, hours, distances, or neighborhoods.
-- If the user provided NO local details, localKnowledgeNeeded.detailsProvided MUST remain an empty array.
-- Only include local places/facts in detailsProvided if they appear verbatim in the user's localDetailsProvided field.
-- Do not add new URLs to internal links; only use links/categories from the baseline or user input.
-- Keep the same JSON structure. Return valid JSON only. No markdown fences or commentary.
-- Do not use em dashes. Use periods, commas, or colons instead.
-- Preserve factual overview fields (destination, contentType, primaryKeyword, audience, seasonality, businessGoal) from the baseline unless improving ctaGoal wording only.
-- Keep recommendedStructure section count and levels similar to the baseline; you may refine heading wording but not invent specific venue names.
-- Improve competitiveAndRefreshNotes and simpleviewPlatformNotes for clarity; do not invent competitor claims or partner names.`;
+- If the user provided NO local details, localKnowledgeNeeded.detailsProvided MUST be [].
+- Do not add new internal link URLs; only use links from the baseline or user input.
+- Return valid JSON only. No markdown fences or commentary.
+- Do not use em dashes.
+- Preserve overview.destination, contentType, primaryKeyword, audience, seasonality, businessGoal from baseline (ctaGoal may be improved).
+- Keep recommendedStructure section count and levels similar to the baseline.`;
 
 export type EnhanceBriefResult =
-  | { success: true; brief: DestinationBrief }
+  | { success: true; brief: DestinationBrief; usedLenientMerge?: boolean }
   | { success: false; error: string };
 
 function buildUserPrompt(input: DestinationBriefInput, baseline: DestinationBrief): string {
-  const { competitiveAndRefreshNotes, simpleviewPlatformNotes, markdownOutput: _md, ...rest } = baseline;
-  return JSON.stringify(
-    {
-      formInput: input,
-      baselineBrief: {
-        ...rest,
-        competitiveAndRefreshNotes,
-        simpleviewPlatformNotes,
-      },
-    },
-    null,
-    2,
-  );
+  const { markdownOutput: _md, ...baselineBody } = baseline;
+  return JSON.stringify({ formInput: input, baselineBrief: baselineBody }, null, 2);
 }
 
 function sanitizeEnhancedBrief(
@@ -56,11 +54,10 @@ function sanitizeEnhancedBrief(
       ...baseline.overview,
       ctaGoal: enhanced.overview.ctaGoal || baseline.overview.ctaGoal,
     },
-    competitiveAndRefreshNotes: baseline.competitiveAndRefreshNotes,
-    simpleviewPlatformNotes:
-      enhanced.simpleviewPlatformNotes.length > 0
-        ? enhanced.simpleviewPlatformNotes
-        : baseline.simpleviewPlatformNotes,
+    competitiveAndRefreshNotes:
+      enhanced.competitiveAndRefreshNotes.length > 0
+        ? enhanced.competitiveAndRefreshNotes
+        : baseline.competitiveAndRefreshNotes,
     localKnowledgeNeeded: {
       detailsProvided: userLocalDetails,
       additionalToConfirm:
@@ -98,13 +95,14 @@ export async function enhanceBriefWithOpenAI(
   try {
     const completion = await client.chat.completions.create({
       model,
-      temperature: 0.4,
+      temperature: 0.35,
+      max_tokens: 12000,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Enhance this DMO content brief. Return a single JSON object matching the baseline structure.\n\n${buildUserPrompt(input, baseline)}`,
+          content: `Enhance this DMO content brief. Return the full JSON object with every required key.\n\n${buildUserPrompt(input, baseline)}`,
         },
       ],
     });
@@ -114,15 +112,31 @@ export async function enhanceBriefWithOpenAI(
       return { success: false, error: "OpenAI returned an empty response." };
     }
 
-    const parsed: unknown = JSON.parse(raw);
-    const validated = destinationBriefBodySchema.safeParse(parsed);
-    if (!validated.success) {
-      console.error("[OpenAI brief] Schema validation failed:", validated.error.flatten());
-      return { success: false, error: "OpenAI response did not match the expected brief format." };
+    let parsed: unknown;
+    try {
+      parsed = parseOpenAIJsonContent(raw);
+    } catch {
+      return { success: false, error: "OpenAI returned invalid JSON." };
     }
 
-    const sanitized = sanitizeEnhancedBrief(validated.data, baseline, input);
-    return { success: true, brief: attachMarkdownOutput(sanitized, input) };
+    const strict = destinationBriefBodySchema.safeParse(parsed);
+    let body: DestinationBriefBody;
+    let usedLenientMerge = false;
+
+    if (strict.success) {
+      body = strict.data;
+    } else {
+      console.warn("[OpenAI brief] Strict validation failed, merging with baseline:", strict.error.flatten());
+      body = mergeOpenAIResponseWithBaseline(parsed, baseline, input);
+      usedLenientMerge = true;
+    }
+
+    const sanitized = sanitizeEnhancedBrief(body, baseline, input);
+    return {
+      success: true,
+      brief: attachMarkdownOutput(sanitized, input),
+      usedLenientMerge,
+    };
   } catch (error) {
     console.error("[OpenAI brief] Enhancement failed:", error);
     return { success: false, error: formatOpenAIError(error) };
