@@ -3,6 +3,7 @@ import { getOpenAIConfig } from "@/lib/env/openai";
 import { getOpenAIClient } from "@/lib/env/openaiClient";
 import { destinationBriefBodySchema } from "./briefSchema";
 import { attachMarkdownOutput, normalizeBriefInput } from "./generateDestinationBrief";
+import { MIN_STRATEGIC_INTERNAL_LINKS } from "./internalLinkSuggestions";
 import { mergeOpenAIResponseWithBaseline, parseOpenAIJsonContent } from "./mergeOpenAIBrief";
 import type { DestinationBrief, DestinationBriefInput } from "./types";
 import type { DestinationBriefBody } from "./briefSchema";
@@ -21,7 +22,7 @@ overview, strategicObjective, competitiveAndRefreshNotes, simpleviewPlatformNote
 Enum rules (use exact strings only):
 - searchIntent.primaryIntent and searchIntent.supportingIntents: "Inspiration", "Trip planning", "Transactional / booking support", "Local discovery", "Event planning", "Meeting planning", "Comparison / research"
 - recommendedStructure[].level: "H1", "H2", or "H3"
-- internalLinkRecommendations[].source: "provided", "suggested-url", or "suggested-category"
+- internalLinkRecommendations[].source: "provided", "discovered-url", "suggested-url", or "suggested-category"
 - schemaRecommendations[].type: "Article", "FAQPage", "BreadcrumbList", "Event", "TouristDestination", "LocalBusiness", "ItemList", "HowTo", "CollectionPage"
 
 CRITICAL RULES:
@@ -48,6 +49,16 @@ function pickInternalLinkRecommendations(
   baseline: DestinationBrief["internalLinkRecommendations"],
 ): DestinationBriefBody["internalLinkRecommendations"] {
   if (enhanced.length === 0) return baseline;
+
+  const countUrlLinks = (entries: DestinationBriefBody["internalLinkRecommendations"]) =>
+    entries.filter((entry) => entry.source !== "suggested-category").length;
+
+  const enhancedUrlCount = countUrlLinks(enhanced);
+  const baselineUrlCount = countUrlLinks(baseline);
+
+  if (enhancedUrlCount < MIN_STRATEGIC_INTERNAL_LINKS && baselineUrlCount >= enhancedUrlCount) {
+    return baseline;
+  }
 
   const enhancedHasUrls = enhanced.some((entry) => /^https?:\/\//i.test(entry.link));
   const baselineHasUrls = baseline.some((entry) => /^https?:\/\//i.test(entry.link));

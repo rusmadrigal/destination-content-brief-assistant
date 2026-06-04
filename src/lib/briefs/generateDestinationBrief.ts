@@ -17,16 +17,14 @@ import {
   BASE_SCHEMA_TYPES,
   CONTENT_TYPE_PRIMARY_INTENT,
   CONTENT_TYPE_SCHEMA,
-  DEFAULT_INTERNAL_LINK_CATEGORIES,
   QUERY_SECTION_KEYWORDS,
   SCHEMA_REASONS,
   STRUCTURE_TEMPLATES,
 } from "./briefTemplates";
 import {
-  inferInternalLinksFromContext,
-  resolveInternalLink,
-  suggestPlacementForCategory,
-  suggestPlacementForLink,
+  buildStrategicInternalLinkRecommendations,
+  type LinkDiscoverySignals,
+  type StrategicLinkContext,
 } from "./internalLinkSuggestions";
 import type {
   BusinessGoal,
@@ -340,32 +338,19 @@ function buildLocalKnowledge(
 function buildInternalLinks(
   normalized: NormalizedBriefInput,
   contentType: ContentType,
+  primaryKeyword: string,
+  discoveredLinks: string[] = [],
+  linkSignals?: LinkDiscoverySignals,
 ): InternalLinkRecommendation[] {
-  if (normalized.internalLinks.length > 0) {
-    return normalized.internalLinks.map((link) => {
-      const resolved = resolveInternalLink(link, normalized.currentUrl);
-      return {
-        link: resolved,
-        source: "provided" as const,
-        placement: suggestPlacementForLink(resolved),
-      };
-    });
-  }
-
-  const inferred = inferInternalLinksFromContext(normalized.currentUrl, contentType);
-  if (inferred.length > 0) {
-    return inferred.map((link) => ({
-      link,
-      source: "suggested-url" as const,
-      placement: suggestPlacementForLink(link),
-    }));
-  }
-
-  return DEFAULT_INTERNAL_LINK_CATEGORIES.map((category) => ({
-    link: category,
-    source: "suggested-category" as const,
-    placement: suggestPlacementForCategory(category),
-  }));
+  const ctx: StrategicLinkContext = {
+    currentUrl: normalized.currentUrl,
+    contentType,
+    primaryKeyword,
+    providedLinks: normalized.internalLinks,
+    discoveredLinks,
+    linkSignals,
+  };
+  return buildStrategicInternalLinkRecommendations(ctx);
 }
 
 function buildSchemaRecommendations(contentType: ContentType): SchemaRecommendation[] {
@@ -655,10 +640,17 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   const hasSuggestedCategories = brief.internalLinkRecommendations.some(
     (entry) => entry.source === "suggested-category",
   );
+  const hasDiscoveredUrls = brief.internalLinkRecommendations.some(
+    (entry) => entry.source === "discovered-url",
+  );
   const hasSuggestedUrls = brief.internalLinkRecommendations.some(
     (entry) => entry.source === "suggested-url",
   );
-  if (input.internalLinks.length === 0 && hasSuggestedUrls) {
+  if (input.internalLinks.length === 0 && hasDiscoveredUrls) {
+    push(
+      "_Strategic internal links were discovered by scanning the destination site (page HTML and sitemap when available). Verify each URL before publishing._",
+    );
+  } else if (input.internalLinks.length === 0 && hasSuggestedUrls) {
     push(
       `_No internal links were provided. Recommended on-site URLs were inferred from the current page URL and content type. Verify each link before publishing._`,
     );
@@ -737,13 +729,23 @@ export function attachMarkdownOutput(
   };
 }
 
+export interface GenerateDestinationBriefOptions {
+  /** URLs discovered by scanning the destination site (server-side only). */
+  discoveredLinks?: string[];
+  /** Navigation and in-page link signals from the site crawl. */
+  linkSignals?: LinkDiscoverySignals;
+}
+
 /**
  * Generate a fully structured, deterministic destination content brief.
  *
  * Assumes required fields are present (validate with `validateBriefInput`
  * first). Optional fields are handled gracefully when empty.
  */
-export function generateDestinationBrief(input: DestinationBriefInput): DestinationBrief {
+export function generateDestinationBrief(
+  input: DestinationBriefInput,
+  options: GenerateDestinationBriefOptions = {},
+): DestinationBrief {
   const destination = input.destinationName.trim();
   const contentType = input.contentType as ContentType;
   const audience = input.targetAudience as TargetAudience;
@@ -784,7 +786,13 @@ export function generateDestinationBrief(input: DestinationBriefInput): Destinat
     recommendedStructure,
     secondaryQueryMapping: mapSecondaryQueries(normalized.secondaryQueries, recommendedStructure),
     localKnowledgeNeeded: buildLocalKnowledge(destination, contentType, normalized.localDetails),
-    internalLinkRecommendations: buildInternalLinks(normalized, contentType),
+    internalLinkRecommendations: buildInternalLinks(
+      normalized,
+      contentType,
+      primaryKeyword,
+      options.discoveredLinks ?? [],
+      options.linkSignals,
+    ),
     schemaRecommendations: buildSchemaRecommendations(contentType),
     faqSuggestions: buildFaqSuggestions(destination, contentType, season, audience),
     aiSearchReadinessNotes: buildAiReadinessNotes(),

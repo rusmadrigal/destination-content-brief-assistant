@@ -224,7 +224,16 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
             No internal links provided. Recommended categories below (no URLs invented).
           </p>
         )}
-        {brief.internalLinkRecommendations.some((entry) => entry.source === "suggested-url") && (
+        {brief.internalLinkRecommendations.some((entry) => entry.source === "discovered-url") && (
+          <p className="mb-3 text-xs italic text-slate-500">
+            At least{" "}
+            {brief.internalLinkRecommendations.filter((entry) => entry.source !== "suggested-category").length}{" "}
+            strategic links from site crawl (navigation + in-page references prioritized). Verify each link before
+            publishing.
+          </p>
+        )}
+        {brief.internalLinkRecommendations.some((entry) => entry.source === "suggested-url") &&
+          !brief.internalLinkRecommendations.some((entry) => entry.source === "discovered-url") && (
           <p className="mb-3 text-xs italic text-slate-500">
             Recommended on-site URLs inferred from your current page URL and content type. Verify each link before
             publishing.
@@ -243,6 +252,11 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
                 {r.source === "suggested-url" && (
                   <span className="ml-2">
                     <Badge tone="cyan">suggested URL</Badge>
+                  </span>
+                )}
+                {r.source === "discovered-url" && (
+                  <span className="ml-2">
+                    <Badge tone="violet">from site</Badge>
                   </span>
                 )}
               </span>

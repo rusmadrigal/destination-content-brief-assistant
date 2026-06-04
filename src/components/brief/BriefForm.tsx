@@ -226,7 +226,7 @@ export function BriefForm({
           <TextAreaField
             id="internalLinks"
             label="Internal Links"
-            helperText="One URL or path per line. Leave blank to get recommended links from your current page URL."
+            helperText="One URL or path per line. Leave blank to auto-discover at least 3 strategic links from your site."
             placeholder={"/things-to-do/\n/events/\n/restaurants/\n/places-to-stay/\n/itineraries/"}
             value={value.internalLinks}
             onChange={handleInput("internalLinks")}
