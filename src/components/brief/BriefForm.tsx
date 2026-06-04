@@ -79,7 +79,7 @@ export function BriefForm({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
       <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-ai-violet-400/80">
+        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-granicus-red">
           Destination &amp; Content
         </legend>
 
@@ -142,7 +142,7 @@ export function BriefForm({
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-ai-cyan-400/80">
+        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-granicus-blue">
           Audience &amp; Strategy
         </legend>
 
@@ -198,7 +198,7 @@ export function BriefForm({
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-slate-500">
+        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-granicus-navy/70">
           URLs &amp; Linking
         </legend>
 
@@ -236,7 +236,7 @@ export function BriefForm({
       </fieldset>
 
       <fieldset className="flex flex-col gap-4">
-        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-ai-fuchsia-400/80">
+        <legend className="mb-1 text-xs font-semibold uppercase tracking-wider text-granicus-red/80">
           Voice &amp; Local Context
         </legend>
 
@@ -263,26 +263,26 @@ export function BriefForm({
         />
       </fieldset>
 
-      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] px-3 py-3">
+      <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-slate-200 bg-granicus-teal-soft/50 px-3 py-3">
         <input
           type="checkbox"
           checked={templateOnly}
           onChange={(e) => onTemplateOnlyChange(e.target.checked)}
-          className="mt-0.5 h-4 w-4 rounded border-white/20 bg-white/5 text-ai-violet-500 focus:ring-ai-violet-500/40"
+          className="mt-0.5 h-4 w-4 rounded border-slate-300 text-granicus-red focus:ring-granicus-red/30"
         />
-        <span className="text-sm text-slate-300">
-          <span className="font-medium text-slate-200">Template only</span>
+        <span className="text-sm text-slate-600">
+          <span className="font-medium text-granicus-navy">Template only</span>
           <span className="mt-0.5 block text-xs text-slate-500">
             Skip OpenAI for brief generation and field suggestions.
           </span>
         </span>
       </label>
 
-      <div className="sticky bottom-0 -mx-6 -mb-6 flex flex-wrap gap-3 border-t border-white/10 bg-[#0c0c14]/90 px-6 py-4 backdrop-blur-xl">
+      <div className="sticky bottom-0 -mx-6 -mb-6 flex flex-wrap gap-3 border-t border-slate-200 bg-white/95 px-6 py-4 backdrop-blur-xl">
         <button
           type="submit"
           disabled={isGenerating}
-          className="btn-ai-primary inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-ai-violet-400/50 disabled:cursor-not-allowed disabled:opacity-50"
+          className="btn-ai-primary inline-flex flex-1 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-semibold text-white focus:outline-none focus:ring-2 focus:ring-granicus-red/30 disabled:cursor-not-allowed disabled:opacity-50"
         >
           {isGenerating ? (
             <>
@@ -306,7 +306,7 @@ export function BriefForm({
           type="button"
           onClick={onClear}
           disabled={isGenerating}
-          className="inline-flex items-center justify-center rounded-xl border border-white/10 bg-white/5 px-4 py-2.5 text-sm font-semibold text-slate-300 transition-colors hover:border-white/20 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-white/20 disabled:cursor-not-allowed disabled:opacity-50"
+          className="inline-flex items-center justify-center rounded-full border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-granicus-navy transition-colors hover:border-slate-300 hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-50"
         >
           Clear Form
         </button>

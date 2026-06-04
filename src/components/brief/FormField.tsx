@@ -14,19 +14,19 @@ interface FieldShellProps {
 function FieldShell({ id, label, helperText, required, error, warning, children }: FieldShellProps) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium text-slate-200">
+      <label htmlFor={id} className="text-sm font-medium text-granicus-navy">
         {label}
-        {required && <span className="ml-0.5 text-ai-fuchsia-400">*</span>}
+        {required && <span className="ml-0.5 text-granicus-red">*</span>}
       </label>
       {helperText && <p className="text-xs text-slate-500">{helperText}</p>}
       {children}
       {error && (
-        <p className="text-xs font-medium text-rose-400" role="alert">
+        <p className="text-xs font-medium text-red-600" role="alert">
           {error}
         </p>
       )}
       {!error && warning && (
-        <p className="text-xs font-medium text-amber-400/90" role="status">
+        <p className="text-xs font-medium text-amber-700" role="status">
           {warning}
         </p>
       )}
@@ -35,12 +35,12 @@ function FieldShell({ id, label, helperText, required, error, warning, children 
 }
 
 const controlBase =
-  "w-full rounded-xl border bg-white/[0.03] px-3 py-2.5 text-sm text-slate-100 shadow-inner transition-all placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-ai-violet-500/40 focus:border-ai-violet-500/50 focus:bg-white/[0.05] disabled:cursor-not-allowed disabled:opacity-50";
+  "w-full rounded-xl border bg-white px-3 py-2.5 text-sm text-granicus-navy shadow-sm transition-all placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-granicus-red/25 focus:border-granicus-red/40 disabled:cursor-not-allowed disabled:opacity-50";
 
 function controlBorder(error?: string): string {
   return error
-    ? "border-rose-500/50 focus:border-rose-400 focus:ring-rose-500/30"
-    : "border-white/10 hover:border-white/15";
+    ? "border-red-300 focus:border-red-400 focus:ring-red-200"
+    : "border-slate-200 hover:border-slate-300";
 }
 
 type TextFieldProps = {
@@ -109,11 +109,11 @@ export function SelectField<T extends string>({
   return (
     <FieldShell id={id} label={label} helperText={helperText} required={required} error={error}>
       <select id={id} className={`${controlBase} ${controlBorder(error)} cursor-pointer`} {...rest}>
-        <option value="" className="bg-surface-800 text-slate-300">
+        <option value="" className="bg-white text-slate-600">
           {placeholder}
         </option>
         {options.map((opt) => (
-          <option key={opt.value} value={opt.value} className="bg-surface-800 text-slate-100">
+          <option key={opt.value} value={opt.value} className="bg-white text-granicus-navy">
             {opt.label}
           </option>
         ))}

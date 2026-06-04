@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { GranicusDestinationsLogo } from "@/components/brand/GranicusDestinationsLogo";
 import { generateDestinationBrief } from "@/lib/briefs/generateDestinationBrief";
 import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
 import { EMPTY_BRIEF_INPUT } from "@/lib/briefs/options";
@@ -196,30 +197,30 @@ export function BriefAssistant() {
         <main className="mx-auto w-full max-w-7xl px-4 pb-8 pt-6 sm:px-6 lg:px-8">
           {generateNotice && (
             <div
-              className="mb-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200"
+              className="mb-6 flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
               role="status"
             >
-              <span className="mt-0.5 shrink-0 text-amber-400">◇</span>
+              <span className="mt-0.5 shrink-0 text-amber-600">◇</span>
               <p>{generateNotice}</p>
             </div>
           )}
 
           {generateError && (
             <div
-              className="mb-6 flex items-start gap-3 rounded-xl border border-ai-fuchsia-500/30 bg-ai-fuchsia-500/10 px-4 py-3 text-sm text-ai-fuchsia-200"
+              className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900"
               role="status"
             >
-              <span className="mt-0.5 shrink-0 text-ai-fuchsia-400">◇</span>
+              <span className="mt-0.5 shrink-0 text-granicus-red">◇</span>
               <p>{generateError}</p>
             </div>
           )}
 
           {hasErrors(errors) && (
             <div
-              className="mb-6 flex items-start gap-3 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm text-rose-300 backdrop-blur"
+              className="mb-6 flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800"
               role="alert"
             >
-              <span className="mt-0.5 font-semibold text-rose-400">!</span>
+              <span className="mt-0.5 font-semibold text-granicus-red">!</span>
               <p>Please complete all required fields before generating a brief. Required fields are marked with an asterisk.</p>
             </div>
           )}
@@ -229,12 +230,12 @@ export function BriefAssistant() {
               <div className="glow-border brief-scroll">
                 <div className="glow-border-inner p-6">
                   <div className="mb-5 flex items-center gap-2">
-                    <span className="rounded-full bg-ai-violet-500/20 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ai-violet-400">
+                    <span className="rounded-full bg-granicus-red/10 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-granicus-red">
                       Inputs
                     </span>
-                    <h2 className="text-base font-semibold text-slate-100">Content Brief Inputs</h2>
+                    <h2 className="text-base font-semibold text-granicus-navy">Content Brief Inputs</h2>
                   </div>
-                  <p className="mb-5 text-sm text-slate-500">
+                  <p className="mb-5 text-sm text-slate-600">
                     Provide your SEO and planning details. Required fields are marked with an asterisk.
                   </p>
                   <BriefForm
@@ -280,59 +281,36 @@ function waitForLoadingAnimation(minMs: number): Promise<void> {
   });
 }
 
-function AiSparkleIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-white">
-      <path
-        d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
-        fill="currentColor"
-        opacity="0.95"
-      />
-      <path
-        d="M19 3L19.6 5.4L22 6L19.6 6.6L19 9L18.4 6.6L16 6L18.4 5.4L19 3Z"
-        fill="currentColor"
-        opacity="0.7"
-      />
-      <path
-        d="M5 15L5.5 16.8L7.5 17.3L5.5 17.8L5 19.5L4.5 17.8L2.5 17.3L4.5 16.8L5 15Z"
-        fill="currentColor"
-        opacity="0.6"
-      />
-    </svg>
-  );
-}
-
 function Header() {
   return (
-    <header className="glass-panel-strong sticky top-0 z-20 border-b border-white/10">
-      <div className="mx-auto w-full max-w-7xl px-4 py-5 sm:px-6 lg:px-8">
+    <header className="glass-panel-strong sticky top-0 z-20 border-b border-slate-200">
+      <div className="mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 lg:px-8">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-          <div className="flex items-start gap-4">
-            <div className="relative flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-ai-violet-600 via-indigo-500 to-ai-cyan-500 shadow-lg shadow-ai-violet-500/30">
-              <AiSparkleIcon />
-              <span className="absolute -right-0.5 -top-0.5 h-2.5 w-2.5 rounded-full bg-ai-cyan-400 ai-pulse-dot ring-2 ring-[#06060b]" />
-            </div>
-            <div>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <GranicusDestinationsLogo size="md" />
+            <div className="hidden h-9 w-px bg-slate-200 sm:block sm:h-10" aria-hidden="true" />
+            <div className="min-w-0">
               <div className="mb-1 flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-ai-violet-500/30 bg-ai-violet-500/10 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-ai-violet-300">
-                  <span className="h-1.5 w-1.5 rounded-full bg-ai-cyan-400 ai-pulse-dot" />
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-granicus-red/20 bg-granicus-red/5 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-granicus-red">
+                  <span className="h-1.5 w-1.5 rounded-full bg-granicus-red ai-pulse-dot" />
                   AI-assisted
                 </span>
-                <span className="rounded-full border border-white/10 bg-white/5 px-2 py-0.5 text-[10px] font-medium text-slate-500">
-                  Simpleview · DMO
+                <span className="rounded-full border border-slate-200 bg-granicus-teal-soft px-2 py-0.5 text-[10px] font-medium text-granicus-navy">
+                  DMO Content Planning
                 </span>
               </div>
-              <h1 className="text-xl font-semibold tracking-tight text-gradient-ai sm:text-2xl">
-                Destination Content Brief Assistant
+              <h1 className="text-xl font-semibold tracking-tight text-granicus-navy sm:text-2xl">
+                Content Brief Assistant
               </h1>
-              <p className="mt-1 max-w-2xl text-sm text-slate-400">
-                Create SEO-informed content briefs for DMO teams. Strategic planning, not final AI-written copy.
+              <p className="mt-1 max-w-2xl text-sm text-slate-600">
+                Create SEO-informed content briefs for destination marketing teams. Strategic planning, not final
+                AI-written copy.
               </p>
             </div>
           </div>
           <div className="shrink-0">
-            <span className="inline-flex items-start gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs text-slate-400 backdrop-blur">
-              <span className="mt-0.5 text-ai-cyan-400">◇</span>
+            <span className="inline-flex items-start gap-2 rounded-xl border border-slate-200 bg-granicus-teal-soft/60 px-3 py-2.5 text-xs text-slate-600">
+              <span className="mt-0.5 text-granicus-blue">◇</span>
               <span className="max-w-xs leading-relaxed">
                 Briefs are planning outputs. Final content should be written or reviewed by local experts.
               </span>

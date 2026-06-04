@@ -13,9 +13,9 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Destination Content Brief Assistant",
+  title: "Content Brief Assistant | Granicus Destinations",
   description:
-    "Create SEO-informed content briefs for DMO teams without generating final AI-written content.",
+    "Create SEO-informed content briefs for DMO teams with Granicus Destinations. Strategic planning, not final AI-written content.",
 };
 
 export default function RootLayout({
@@ -28,7 +28,7 @@ export default function RootLayout({
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-[#06060b] text-slate-100">{children}</body>
+      <body className="min-h-full bg-white text-granicus-navy">{children}</body>
     </html>
   );
 }

@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { buildBriefFilename } from "@/lib/briefs/generateDestinationBrief";
 import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
 import type { DestinationBrief, DestinationBriefInput } from "@/lib/briefs/types";
 import { Badge, BriefSection, BulletList, CheckList, KeyValueGrid } from "./BriefSection";
@@ -40,20 +39,6 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
     }
   }
 
-  function handleDownload() {
-    if (!brief) return;
-    const filename = buildBriefFilename(brief.overview.destination, brief.overview.primaryKeyword);
-    const blob = new Blob([brief.markdownOutput], { type: "text/markdown;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = filename;
-    document.body.appendChild(anchor);
-    anchor.click();
-    document.body.removeChild(anchor);
-    URL.revokeObjectURL(url);
-  }
-
   if (isGenerating) {
     return (
       <div className="relative min-h-[420px] overflow-hidden rounded-2xl glass-panel">
@@ -76,33 +61,26 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
       <div className="glass-panel-strong sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
-            <p className="text-[10px] font-semibold uppercase tracking-wider text-ai-cyan-400">Generated brief</p>
+            <p className="text-[10px] font-semibold uppercase tracking-wider text-granicus-blue">Generated brief</p>
             {source === "openai" ? (
               <Badge tone="violet">OpenAI enhanced</Badge>
             ) : (
               <Badge tone="slate">Template</Badge>
             )}
           </div>
-          <p className="text-sm font-semibold text-slate-100">{o.destination}</p>
+          <p className="text-sm font-semibold text-granicus-navy">{o.destination}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           <button
             type="button"
             onClick={handleCopy}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2 text-xs font-semibold text-slate-200 transition-colors hover:border-ai-violet-500/40 hover:bg-ai-violet-500/10 focus:outline-none focus:ring-2 focus:ring-ai-violet-500/30"
+            className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-granicus-navy transition-colors hover:border-granicus-red/30 hover:bg-granicus-red/5 focus:outline-none focus:ring-2 focus:ring-granicus-red/20"
           >
             {copied ? (
-              <span className="text-ai-cyan-400">Copied ✓</span>
+              <span className="text-granicus-red">Copied ✓</span>
             ) : (
               "Copy Brief"
             )}
-          </button>
-          <button
-            type="button"
-            onClick={handleDownload}
-            className="btn-ai-primary inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-semibold text-white focus:outline-none focus:ring-2 focus:ring-ai-cyan-400/40"
-          >
-            Download Markdown
           </button>
         </div>
       </div>
@@ -124,7 +102,7 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
       </BriefSection>
 
       <BriefSection index={2} title="Strategic Objective">
-        <p className="text-slate-300">{brief.strategicObjective}</p>
+        <p className="text-slate-700">{brief.strategicObjective}</p>
       </BriefSection>
 
       <BriefSection index={3} title="Competitive & Content Refresh Notes">
@@ -144,7 +122,7 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
             </Badge>
           ))}
         </div>
-        <p className="text-slate-300">{brief.searchIntent.explanation}</p>
+        <p className="text-slate-700">{brief.searchIntent.explanation}</p>
       </BriefSection>
 
       <BriefSection index={6} title="Recommended H1">
@@ -166,13 +144,13 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
               key={`${s.heading}-${i}`}
               className={
                 s.level === "H1"
-                  ? "font-semibold text-slate-100"
+                  ? "font-semibold text-granicus-navy"
                   : s.level === "H2"
-                    ? "text-slate-300"
+                    ? "text-slate-700"
                     : "pl-6 text-slate-500"
               }
             >
-              <span className="mr-2 inline-block rounded-md border border-white/10 bg-ai-violet-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-ai-violet-300">
+              <span className="mr-2 inline-block rounded-md border border-granicus-red/20 bg-granicus-red/10 px-1.5 py-0.5 text-[10px] font-semibold text-granicus-red">
                 {s.level}
               </span>
               {s.heading}
@@ -190,9 +168,9 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
             {brief.secondaryQueryMapping.map((m, i) => (
               <li
                 key={i}
-                className="flex flex-col gap-1 rounded-xl border border-white/5 bg-white/[0.02] px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
+                className="flex flex-col gap-1 rounded-xl border border-slate-200 bg-granicus-teal-soft/30 px-3 py-2.5 sm:flex-row sm:items-center sm:justify-between"
               >
-                <span className="text-slate-300">&ldquo;{m.query}&rdquo;</span>
+                <span className="text-slate-700">&ldquo;{m.query}&rdquo;</span>
                 <Badge tone="cyan">{m.suggestedSection}</Badge>
               </li>
             ))}
@@ -203,14 +181,14 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
       <BriefSection index={11} title="Local Knowledge Needed">
         {brief.localKnowledgeNeeded.detailsProvided.length > 0 ? (
           <div className="mb-4">
-            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-ai-cyan-400">Local Details Provided</p>
+            <p className="mb-2 text-xs font-semibold uppercase tracking-wider text-granicus-blue">Local Details Provided</p>
             <BulletList items={brief.localKnowledgeNeeded.detailsProvided} />
-            <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-ai-fuchsia-400">
+            <p className="mb-2 mt-4 text-xs font-semibold uppercase tracking-wider text-granicus-red">
               Additional Local Details to Confirm
             </p>
           </div>
         ) : (
-          <div className="mb-3 rounded-xl border border-ai-fuchsia-500/25 bg-ai-fuchsia-500/10 px-3 py-2.5 text-xs text-ai-fuchsia-300">
+          <div className="mb-3 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-900">
             No local details were provided. Do not invent local specifics. Validate the checklist below with a local
             stakeholder before writing.
           </div>
@@ -241,8 +219,8 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
         )}
         <ul className="flex flex-col gap-2">
           {brief.internalLinkRecommendations.map((r, i) => (
-            <li key={i} className="flex flex-col gap-0.5 rounded-lg border border-white/5 px-2 py-1.5">
-              <span className="font-medium text-slate-200">
+            <li key={i} className="flex flex-col gap-0.5 rounded-lg border border-slate-200 bg-white px-2 py-1.5">
+              <span className="font-medium text-granicus-navy">
                 {r.link}
                 {r.source === "suggested-category" && (
                   <span className="ml-2">
@@ -284,7 +262,7 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
       </BriefSection>
 
       <BriefSection index={15} title="AI Search Readiness Notes">
-        <div className="rounded-xl border border-ai-cyan-500/20 bg-ai-cyan-500/5 p-3">
+        <div className="rounded-xl border border-granicus-blue/20 bg-granicus-blue/5 p-3">
           <BulletList items={brief.aiSearchReadinessNotes} />
         </div>
       </BriefSection>
@@ -306,23 +284,23 @@ export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputP
 
 function EmptyState() {
   return (
-    <div className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-white/10 bg-white/[0.02] p-10 text-center">
+    <div className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-slate-300 bg-granicus-teal-soft/40 p-10 text-center">
       <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
-        <div className="h-48 w-48 rounded-full bg-ai-violet-500/20 blur-3xl" />
-        <div className="absolute h-32 w-32 translate-x-16 rounded-full bg-ai-cyan-500/15 blur-3xl" />
+        <div className="h-48 w-48 rounded-full bg-granicus-red/10 blur-3xl" />
+        <div className="absolute h-32 w-32 translate-x-16 rounded-full bg-granicus-blue/10 blur-3xl" />
       </div>
-      <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-gradient-to-br from-ai-violet-500/20 to-ai-cyan-500/20">
-        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-ai-violet-400">
+      <div className="relative mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" className="text-granicus-red">
           <path
             d="M12 2L13.5 8.5L20 10L13.5 11.5L12 18L10.5 11.5L4 10L10.5 8.5L12 2Z"
             fill="currentColor"
           />
         </svg>
       </div>
-      <h3 className="relative text-sm font-semibold text-slate-200">Ready to generate</h3>
-      <p className="relative mt-2 max-w-sm text-sm text-slate-500">
+      <h3 className="relative text-sm font-semibold text-granicus-navy">Ready to generate</h3>
+      <p className="relative mt-2 max-w-sm text-sm text-slate-600">
         Complete the inputs and select{" "}
-        <span className="font-medium text-ai-violet-300">Generate Brief</span> to produce a structured,
+        <span className="font-medium text-granicus-red">Generate Brief</span> to produce a structured,
         SEO-informed content brief powered by deterministic AI planning.
       </p>
     </div>
