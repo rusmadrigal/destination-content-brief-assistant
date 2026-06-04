@@ -226,7 +226,7 @@ export function BriefForm({
           <TextAreaField
             id="internalLinks"
             label="Internal Links"
-            helperText="One URL per line. Leave blank to get recommended link categories."
+            helperText="One URL or path per line. Leave blank to get recommended links from your current page URL."
             placeholder={"/things-to-do/\n/events/\n/restaurants/\n/places-to-stay/\n/itineraries/"}
             value={value.internalLinks}
             onChange={handleInput("internalLinks")}
@@ -286,8 +286,12 @@ export function BriefForm({
         >
           {isGenerating ? (
             <>
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-              Generating…
+              <span className="inline-flex h-4 w-4 items-center justify-center text-white/90 tourism-btn-plane" aria-hidden="true">
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor">
+                  <path d="M21 8L3 14l4 1.5-1 4 2-1 3-3 4 1 1-3 4-1.5-1.5 4 2-1 6-10z" />
+                </svg>
+              </span>
+              Planning your route…
             </>
           ) : (
             <>

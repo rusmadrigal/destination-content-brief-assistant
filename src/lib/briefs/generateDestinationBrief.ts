@@ -22,6 +22,12 @@ import {
   SCHEMA_REASONS,
   STRUCTURE_TEMPLATES,
 } from "./briefTemplates";
+import {
+  inferInternalLinksFromContext,
+  resolveInternalLink,
+  suggestPlacementForCategory,
+  suggestPlacementForLink,
+} from "./internalLinkSuggestions";
 import type {
   BusinessGoal,
   ContentType,
@@ -331,45 +337,35 @@ function buildLocalKnowledge(
   return { detailsProvided: providedDetails, additionalToConfirm: additional };
 }
 
-function buildInternalLinks(providedLinks: string[]): InternalLinkRecommendation[] {
-  if (providedLinks.length > 0) {
-    return providedLinks.map((link) => ({
+function buildInternalLinks(
+  normalized: NormalizedBriefInput,
+  contentType: ContentType,
+): InternalLinkRecommendation[] {
+  if (normalized.internalLinks.length > 0) {
+    return normalized.internalLinks.map((link) => {
+      const resolved = resolveInternalLink(link, normalized.currentUrl);
+      return {
+        link: resolved,
+        source: "provided" as const,
+        placement: suggestPlacementForLink(resolved),
+      };
+    });
+  }
+
+  const inferred = inferInternalLinksFromContext(normalized.currentUrl, contentType);
+  if (inferred.length > 0) {
+    return inferred.map((link) => ({
       link,
-      source: "provided" as const,
+      source: "suggested-url" as const,
       placement: suggestPlacementForLink(link),
     }));
   }
+
   return DEFAULT_INTERNAL_LINK_CATEGORIES.map((category) => ({
     link: category,
     source: "suggested-category" as const,
     placement: suggestPlacementForCategory(category),
   }));
-}
-
-function suggestPlacementForLink(link: string): string {
-  const l = link.toLowerCase();
-  if (/event/.test(l)) return "Within the Events / Events and Festivals section.";
-  if (/stay|hotel|lodg|where-to-stay/.test(l)) return "Within the Where to Stay section.";
-  if (/restaurant|food|dining|eat/.test(l)) return "Within the Food and Drink section.";
-  if (/itinerar/.test(l)) return "Within the Suggested Itinerary or Plan Your Trip section.";
-  if (/thing|do|activit/.test(l)) return "Within the Top Things To Do or related experiences section.";
-  if (/outdoor|hike|trail|park/.test(l)) return "Within the Outdoor Experiences section.";
-  if (/transport|getting|parking|directions/.test(l)) return "Within the Planning Tips / Getting Here section.";
-  if (/neighborhood|district|area/.test(l)) return "Within neighborhood or nearby-experiences context.";
-  return "Within the most topically relevant section; verify anchor text matches the target page.";
-}
-
-function suggestPlacementForCategory(category: string): string {
-  const map: Record<string, string> = {
-    "Things to Do hub": "Link from the introduction and any activity-focused section.",
-    "Events calendar": "Link from the Events section and near time-sensitive content.",
-    "Places to Stay": "Link from the Where to Stay section.",
-    Restaurants: "Link from the Food and Drink section.",
-    Itineraries: "Link from the Suggested Itinerary or planning sections.",
-    "Transportation / Getting Here": "Link from the Planning Tips / Getting Here section.",
-    "Partner listings": "Link contextually where partner businesses are referenced.",
-  };
-  return map[category] ?? "Place contextually within the most relevant section.";
 }
 
 function buildSchemaRecommendations(contentType: ContentType): SchemaRecommendation[] {
@@ -656,7 +652,17 @@ function renderMarkdown(brief: DestinationBrief, input: NormalizedBriefInput): s
   push();
 
   push("## 12. Internal Linking Recommendations");
-  if (input.internalLinks.length === 0) {
+  const hasSuggestedCategories = brief.internalLinkRecommendations.some(
+    (entry) => entry.source === "suggested-category",
+  );
+  const hasSuggestedUrls = brief.internalLinkRecommendations.some(
+    (entry) => entry.source === "suggested-url",
+  );
+  if (input.internalLinks.length === 0 && hasSuggestedUrls) {
+    push(
+      `_No internal links were provided. Recommended on-site URLs were inferred from the current page URL and content type. Verify each link before publishing._`,
+    );
+  } else if (input.internalLinks.length === 0 && hasSuggestedCategories) {
     push("_No internal links provided. Recommended link categories (do not invent URLs):_");
   }
   brief.internalLinkRecommendations.forEach((r) => push(`- **${r.link}**: ${r.placement}`));
@@ -778,7 +784,7 @@ export function generateDestinationBrief(input: DestinationBriefInput): Destinat
     recommendedStructure,
     secondaryQueryMapping: mapSecondaryQueries(normalized.secondaryQueries, recommendedStructure),
     localKnowledgeNeeded: buildLocalKnowledge(destination, contentType, normalized.localDetails),
-    internalLinkRecommendations: buildInternalLinks(normalized.internalLinks),
+    internalLinkRecommendations: buildInternalLinks(normalized, contentType),
     schemaRecommendations: buildSchemaRecommendations(contentType),
     faqSuggestions: buildFaqSuggestions(destination, contentType, season, audience),
     aiSearchReadinessNotes: buildAiReadinessNotes(),

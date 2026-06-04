@@ -64,7 +64,7 @@ export const destinationBriefBodySchema = z.object({
   internalLinkRecommendations: z.array(
     z.object({
       link: z.string(),
-      source: z.enum(["provided", "suggested-category"]),
+      source: z.enum(["provided", "suggested-url", "suggested-category"]),
       placement: z.string(),
     }),
   ),

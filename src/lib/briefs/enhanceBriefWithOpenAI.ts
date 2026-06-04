@@ -1,5 +1,6 @@
 import OpenAI from "openai";
 import { getOpenAIConfig } from "@/lib/env/openai";
+import { getOpenAIClient } from "@/lib/env/openaiClient";
 import { destinationBriefBodySchema } from "./briefSchema";
 import { attachMarkdownOutput, normalizeBriefInput } from "./generateDestinationBrief";
 import { mergeOpenAIResponseWithBaseline, parseOpenAIJsonContent } from "./mergeOpenAIBrief";
@@ -20,7 +21,7 @@ overview, strategicObjective, competitiveAndRefreshNotes, simpleviewPlatformNote
 Enum rules (use exact strings only):
 - searchIntent.primaryIntent and searchIntent.supportingIntents: "Inspiration", "Trip planning", "Transactional / booking support", "Local discovery", "Event planning", "Meeting planning", "Comparison / research"
 - recommendedStructure[].level: "H1", "H2", or "H3"
-- internalLinkRecommendations[].source: "provided" or "suggested-category"
+- internalLinkRecommendations[].source: "provided", "suggested-url", or "suggested-category"
 - schemaRecommendations[].type: "Article", "FAQPage", "BreadcrumbList", "Event", "TouristDestination", "LocalBusiness", "ItemList", "HowTo", "CollectionPage"
 
 CRITICAL RULES:
@@ -39,7 +40,20 @@ export type EnhanceBriefResult =
 
 function buildUserPrompt(input: DestinationBriefInput, baseline: DestinationBrief): string {
   const { markdownOutput: _md, ...baselineBody } = baseline;
-  return JSON.stringify({ formInput: input, baselineBrief: baselineBody }, null, 2);
+  return JSON.stringify({ formInput: input, baselineBrief: baselineBody });
+}
+
+function pickInternalLinkRecommendations(
+  enhanced: DestinationBriefBody["internalLinkRecommendations"],
+  baseline: DestinationBrief["internalLinkRecommendations"],
+): DestinationBriefBody["internalLinkRecommendations"] {
+  if (enhanced.length === 0) return baseline;
+
+  const enhancedHasUrls = enhanced.some((entry) => /^https?:\/\//i.test(entry.link));
+  const baselineHasUrls = baseline.some((entry) => /^https?:\/\//i.test(entry.link));
+  if (!enhancedHasUrls && baselineHasUrls) return baseline;
+
+  return enhanced;
 }
 
 function sanitizeEnhancedBrief(
@@ -58,6 +72,10 @@ function sanitizeEnhancedBrief(
       enhanced.competitiveAndRefreshNotes.length > 0
         ? enhanced.competitiveAndRefreshNotes
         : baseline.competitiveAndRefreshNotes,
+    internalLinkRecommendations: pickInternalLinkRecommendations(
+      enhanced.internalLinkRecommendations,
+      baseline.internalLinkRecommendations,
+    ),
     localKnowledgeNeeded: {
       detailsProvided: userLocalDetails,
       additionalToConfirm:
@@ -85,18 +103,17 @@ export async function enhanceBriefWithOpenAI(
   input: DestinationBriefInput,
   baseline: DestinationBrief,
 ): Promise<EnhanceBriefResult> {
-  const { apiKey, model, isConfigured } = getOpenAIConfig();
-  if (!isConfigured || !apiKey) {
+  const { model, isConfigured } = getOpenAIConfig();
+  const client = getOpenAIClient();
+  if (!isConfigured || !client) {
     return { success: false, error: "OPENAI_API_KEY is not configured." };
   }
-
-  const client = new OpenAI({ apiKey });
 
   try {
     const completion = await client.chat.completions.create({
       model,
       temperature: 0.35,
-      max_tokens: 12000,
+      max_tokens: 4500,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: SYSTEM_PROMPT },

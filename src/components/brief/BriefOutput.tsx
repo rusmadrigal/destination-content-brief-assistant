@@ -3,16 +3,19 @@
 import { useEffect, useState } from "react";
 import { buildBriefFilename } from "@/lib/briefs/generateDestinationBrief";
 import type { BriefGenerationSource } from "@/lib/briefs/generateBrief";
-import type { DestinationBrief } from "@/lib/briefs/types";
+import type { DestinationBrief, DestinationBriefInput } from "@/lib/briefs/types";
 import { Badge, BriefSection, BulletList, CheckList, KeyValueGrid } from "./BriefSection";
+import { PlanningSheetExport } from "./PlanningSheetExport";
+import { TourismLoading } from "./TourismLoading";
 
 interface BriefOutputProps {
   brief: DestinationBrief | null;
+  input: DestinationBriefInput;
   isGenerating: boolean;
   source: BriefGenerationSource | null;
 }
 
-export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
+export function BriefOutput({ brief, input, isGenerating, source }: BriefOutputProps) {
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
@@ -51,8 +54,15 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
     URL.revokeObjectURL(url);
   }
 
-  if (isGenerating && !brief) {
-    return <GeneratingState />;
+  if (isGenerating) {
+    return (
+      <div className="relative min-h-[420px] overflow-hidden rounded-2xl glass-panel">
+        <TourismLoading
+          title="Generating your brief"
+          subtitle="Assembling keywords, page structure, and planning sheet export for your destination."
+        />
+      </div>
+    );
   }
 
   if (!brief) {
@@ -63,18 +73,6 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
 
   return (
     <div className="relative flex flex-col gap-4">
-      {isGenerating && (
-        <div
-          className="absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-[#06060b]/75 backdrop-blur-sm"
-          aria-live="polite"
-          aria-busy="true"
-        >
-          <span className="mb-4 h-10 w-10 animate-spin rounded-full border-2 border-white/10 border-t-ai-cyan-400" />
-          <p className="text-sm font-semibold text-gradient-ai">Regenerating brief…</p>
-          <p className="mt-1 text-xs text-slate-500">This may take a few seconds with OpenAI enabled.</p>
-        </div>
-      )}
-
       <div className="glass-panel-strong sticky top-0 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl px-4 py-3">
         <div>
           <div className="mb-1 flex flex-wrap items-center gap-2">
@@ -108,6 +106,8 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
           </button>
         </div>
       </div>
+
+      <PlanningSheetExport brief={brief} input={input} />
 
       <BriefSection index={1} title="Brief Overview">
         <KeyValueGrid
@@ -224,6 +224,12 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
             No internal links provided. Recommended categories below (no URLs invented).
           </p>
         )}
+        {brief.internalLinkRecommendations.some((entry) => entry.source === "suggested-url") && (
+          <p className="mb-3 text-xs italic text-slate-500">
+            Recommended on-site URLs inferred from your current page URL and content type. Verify each link before
+            publishing.
+          </p>
+        )}
         <ul className="flex flex-col gap-2">
           {brief.internalLinkRecommendations.map((r, i) => (
             <li key={i} className="flex flex-col gap-0.5 rounded-lg border border-white/5 px-2 py-1.5">
@@ -232,6 +238,11 @@ export function BriefOutput({ brief, isGenerating, source }: BriefOutputProps) {
                 {r.source === "suggested-category" && (
                   <span className="ml-2">
                     <Badge tone="slate">category</Badge>
+                  </span>
+                )}
+                {r.source === "suggested-url" && (
+                  <span className="ml-2">
+                    <Badge tone="cyan">suggested URL</Badge>
                   </span>
                 )}
               </span>
@@ -300,33 +311,6 @@ function EmptyState() {
         <span className="font-medium text-ai-violet-300">Generate Brief</span> to produce a structured,
         SEO-informed content brief powered by deterministic AI planning.
       </p>
-    </div>
-  );
-}
-
-function GeneratingState() {
-  return (
-    <div className="relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-2xl glass-panel p-10 text-center">
-      <div className="pointer-events-none absolute inset-0 ai-shimmer" />
-      <div className="relative mb-6">
-        <div className="absolute inset-0 h-16 w-16 rounded-full bg-gradient-to-r from-ai-violet-500 to-ai-cyan-500 opacity-40 blur-xl ai-orbit" />
-        <span className="relative flex h-14 w-14 items-center justify-center rounded-2xl border border-white/10 bg-white/5">
-          <span className="h-8 w-8 animate-spin rounded-full border-2 border-white/10 border-t-ai-cyan-400" />
-        </span>
-      </div>
-      <h3 className="relative text-sm font-semibold text-gradient-ai">Generating brief…</h3>
-      <p className="relative mt-2 text-sm text-slate-500">
-        Assembling structure, search intent, and local validation prompts.
-      </p>
-      <div className="relative mt-6 flex gap-1">
-        {[0, 1, 2].map((i) => (
-          <span
-            key={i}
-            className="h-1.5 w-1.5 rounded-full bg-ai-violet-400 ai-pulse-dot"
-            style={{ animationDelay: `${i * 0.2}s` }}
-          />
-        ))}
-      </div>
     </div>
   );
 }

@@ -114,9 +114,21 @@ export function BriefAssistant() {
     setWarnings(validateBriefWarnings(input));
     if (hasErrors(validation)) return;
 
-    setIsGenerating(true);
     setGenerateError(null);
     setGenerateNotice(null);
+    setBrief(null);
+    setBriefSource(null);
+    setIsGenerating(true);
+
+    const instantBrief = generateDestinationBrief(input);
+
+    if (templateOnly) {
+      await waitForLoadingAnimation(1000);
+      setBrief(instantBrief);
+      setBriefSource("deterministic");
+      setIsGenerating(false);
+      return;
+    }
 
     try {
       const response = await fetch("/api/generate-brief", {
@@ -133,6 +145,8 @@ export function BriefAssistant() {
       };
 
       if (!response.ok) {
+        setBrief(instantBrief);
+        setBriefSource("deterministic");
         setGenerateError(data.error ?? "Failed to generate brief.");
         return;
       }
@@ -146,10 +160,12 @@ export function BriefAssistant() {
           );
         }
       } else {
+        setBrief(instantBrief);
+        setBriefSource("deterministic");
         setGenerateError("Invalid response from server.");
       }
     } catch {
-      setBrief(generateDestinationBrief(input));
+      setBrief(instantBrief);
       setBriefSource("deterministic");
       setGenerateError(
         "Could not reach the server. A template-based brief was generated locally instead.",
@@ -242,7 +258,12 @@ export function BriefAssistant() {
             </div>
 
             <div>
-              <BriefOutput brief={brief} isGenerating={isGenerating} source={briefSource} />
+              <BriefOutput
+                brief={brief}
+                input={input}
+                isGenerating={isGenerating}
+                source={briefSource}
+              />
             </div>
           </div>
         </main>
@@ -251,6 +272,12 @@ export function BriefAssistant() {
       </div>
     </div>
   );
+}
+
+function waitForLoadingAnimation(minMs: number): Promise<void> {
+  return new Promise((resolve) => {
+    window.setTimeout(resolve, minMs);
+  });
 }
 
 function AiSparkleIcon() {

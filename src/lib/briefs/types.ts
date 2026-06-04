@@ -132,8 +132,8 @@ export interface LocalKnowledgeNeeded {
 export interface InternalLinkRecommendation {
   /** The provided URL, or the recommended link category when none supplied. */
   link: string;
-  /** Whether this came from user input or is a generated category suggestion. */
-  source: "provided" | "suggested-category";
+  /** Whether this came from user input, inferred site URLs, or a generated category suggestion. */
+  source: "provided" | "suggested-url" | "suggested-category";
   placement: string;
 }
 

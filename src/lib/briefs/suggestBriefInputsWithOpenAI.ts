@@ -1,5 +1,5 @@
-import OpenAI from "openai";
 import { getOpenAIConfig } from "@/lib/env/openai";
+import { getOpenAIClient } from "@/lib/env/openaiClient";
 import {
   BUSINESS_GOALS,
   CONTENT_TYPES,
@@ -83,25 +83,24 @@ export async function suggestBriefInputsWithOpenAI(
   destinationName: string,
 ): Promise<SuggestInputsResult> {
   const baseline = suggestBriefInputsDeterministic(destinationName);
-  const { apiKey, model, isConfigured } = getOpenAIConfig();
+  const { model, isConfigured } = getOpenAIConfig();
+  const client = getOpenAIClient();
 
-  if (!isConfigured || !apiKey) {
+  if (!isConfigured || !client) {
     return { success: true, suggestions: baseline };
   }
-
-  const client = new OpenAI({ apiKey });
 
   try {
     const completion = await client.chat.completions.create({
       model,
       temperature: 0.5,
-      max_tokens: 2000,
+      max_tokens: 1200,
       response_format: { type: "json_object" },
       messages: [
         { role: "system", content: SYSTEM_PROMPT },
         {
           role: "user",
-          content: `Suggest form values for a DMO content brief about: ${baseline.destinationName}\n\nBaseline to improve (keep valid enums):\n${JSON.stringify(baseline, null, 2)}`,
+          content: `Suggest form values for a DMO content brief about: ${baseline.destinationName}\n\nBaseline to improve (keep valid enums):\n${JSON.stringify(baseline)}`,
         },
       ],
     });

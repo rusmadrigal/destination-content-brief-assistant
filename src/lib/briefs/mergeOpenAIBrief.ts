@@ -113,7 +113,9 @@ function pickInternalLinks(
       if (!link || !placement) return null;
       const sourceRaw = item.source;
       const source =
-        sourceRaw === "provided" || sourceRaw === "suggested-category" ? sourceRaw : fallback[0]?.source ?? "provided";
+        sourceRaw === "provided" || sourceRaw === "suggested-category" || sourceRaw === "suggested-url"
+          ? sourceRaw
+          : fallback[0]?.source ?? "provided";
       return { link, placement, source };
     })
     .filter((item): item is NonNullable<typeof item> => item !== null);

@@ -184,3 +184,203 @@ body {
   background: linear-gradient(180deg, #8b5cf6, #06b6d4);
   border-radius: 9999px;
 }
+
+/* Tourism loading scene */
+.tourism-scene {
+  position: relative;
+  height: 9rem;
+  overflow: hidden;
+  border-radius: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, rgba(34, 211, 238, 0.08) 0%, rgba(12, 12, 20, 0.9) 55%, rgba(124, 58, 237, 0.08) 100%);
+}
+
+.tourism-cloud {
+  position: absolute;
+  top: 1rem;
+  width: 3.5rem;
+  height: 1.1rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+  animation: tourism-cloud-drift 8s linear infinite;
+}
+
+.tourism-cloud::before,
+.tourism-cloud::after {
+  content: "";
+  position: absolute;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.tourism-cloud::before {
+  width: 1.5rem;
+  height: 1.5rem;
+  top: -0.55rem;
+  left: 0.5rem;
+}
+
+.tourism-cloud::after {
+  width: 1.75rem;
+  height: 1.75rem;
+  top: -0.75rem;
+  right: 0.65rem;
+}
+
+.tourism-cloud-a {
+  left: -12%;
+  animation-duration: 9s;
+}
+
+.tourism-cloud-b {
+  left: -28%;
+  top: 2rem;
+  opacity: 0.7;
+  animation-duration: 12s;
+  animation-delay: -3s;
+}
+
+.tourism-hill {
+  position: absolute;
+  bottom: 2.35rem;
+  width: 45%;
+  height: 2.5rem;
+  border-radius: 50% 50% 0 0;
+  background: rgba(57, 122, 175, 0.18);
+}
+
+.tourism-hill-left {
+  left: -8%;
+}
+
+.tourism-hill-right {
+  right: -8%;
+  background: rgba(139, 92, 246, 0.16);
+}
+
+.tourism-road {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 2.1rem;
+  display: flex;
+  justify-content: space-around;
+  padding: 0 0.75rem;
+}
+
+.tourism-road-dash {
+  width: 1.75rem;
+  height: 0.2rem;
+  border-radius: 9999px;
+  background: rgba(255, 255, 255, 0.18);
+  animation: tourism-road-scroll 1.2s linear infinite;
+}
+
+.tourism-road-dash:nth-child(2) {
+  animation-delay: -0.3s;
+}
+
+.tourism-road-dash:nth-child(3) {
+  animation-delay: -0.6s;
+}
+
+.tourism-road-dash:nth-child(4) {
+  animation-delay: -0.9s;
+}
+
+.tourism-vehicle {
+  position: absolute;
+  left: -18%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 6px 14px rgba(34, 211, 238, 0.25));
+  animation: tourism-travel 3.1s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.tourism-vehicle-plane {
+  top: 1.35rem;
+  animation-name: tourism-travel-air;
+}
+
+.tourism-vehicle-car {
+  bottom: 2.35rem;
+}
+
+.tourism-vehicle-bike {
+  bottom: 2.2rem;
+}
+
+@keyframes tourism-travel {
+  0% {
+    transform: translateX(0) scale(0.92);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(520%) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes tourism-travel-air {
+  0% {
+    transform: translateX(0) translateY(0) rotate(-4deg) scale(0.9);
+    opacity: 0;
+  }
+  8% {
+    opacity: 1;
+  }
+  50% {
+    transform: translateX(260%) translateY(-0.35rem) rotate(2deg) scale(1);
+  }
+  92% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(520%) translateY(0.15rem) rotate(-3deg) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes tourism-cloud-drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(100% + 140%));
+  }
+}
+
+@keyframes tourism-road-scroll {
+  from {
+    transform: translateX(0);
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 1;
+  }
+  to {
+    transform: translateX(-120%);
+    opacity: 0.35;
+  }
+}
+
+.tourism-btn-plane {
+  animation: tourism-btn-fly 1.1s ease-in-out infinite;
+}
+
+@keyframes tourism-btn-fly {
+  0%,
+  100% {
+    transform: translateX(-1px) translateY(0) rotate(-8deg);
+  }
+  50% {
+    transform: translateX(2px) translateY(-1px) rotate(6deg);
+  }
+}
